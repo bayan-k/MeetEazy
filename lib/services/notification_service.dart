@@ -79,7 +79,7 @@ class NotificationService extends GetxService {
   }) async {
     try {
       // Calculate notification time (30 minutes before meeting)
-      final notificationTime = meetingTime.subtract(const Duration(minutes: 30));
+      final notificationTime = meetingTime.subtract(const Duration(minutes: 5));
 
       // Convert to TZDateTime
       final scheduledDate = tz.TZDateTime.from(notificationTime, tz.local);
@@ -126,7 +126,7 @@ class NotificationService extends GetxService {
         await flutterLocalNotificationsPlugin.zonedSchedule(
           id,
           'Upcoming Meeting: $title',
-          'Your meeting "$description" starts in 30 minutes!\n\nTime: ${_formatTime(meetingTime)}',
+          'Your meeting "$description" starts in 5 minutes!\n\nTime: ${_formatTime(meetingTime)}',
           scheduledDate,
           platformChannelSpecifics,
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
