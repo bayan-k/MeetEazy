@@ -438,28 +438,26 @@ class _HomePageViewState extends State<HomePageView> {
                                     _selectedDay = selectedDay;
                                     _focusedDay.value = focusedDay;
                                   });
-                                  // Add haptic feedback and show quick preview
-                                  HapticFeedback.lightImpact();
+                                  
+                                  // Check if the selected day has meetings
                                   final count = controller.getMeetingCountForDate(selectedDay);
                                   if (count > 0) {
-                                    Get.snackbar(
-                                      'Events on ${DateFormat('MMM d').format(selectedDay)}',
-                                      '$count meetings scheduled',
-                                      snackPosition: SnackPosition.TOP,
-                                      duration: const Duration(seconds: 2),
-                                      backgroundColor: Color(0xFF9B4DCA).withOpacity(0.9),
-                                      colorText: Colors.white,
-                                      borderRadius: 20,
-                                      margin: const EdgeInsets.all(10),
-                                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-                                      boxShadows: [
-                                        BoxShadow(
-                                          color: Color(0xFF9B4DCA).withOpacity(0.3),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 5),
-                                        ),
-                                      ],
-                                    );
+                                    // Set selected date in controller
+                                    controller.setSelectedDate(selectedDay);
+                                    
+                                    // Add haptic feedback
+                                    HapticFeedback.mediumImpact();
+                                    
+                                    // Navigate to timeline view and trigger scroll after navigation
+                                    Get.find<BottomNavController>().changeIndex(1);
+                                    
+                                    // Add a small delay to ensure the timeline view is rendered
+                                    Future.delayed(Duration(milliseconds: 100), () {
+                                      if (Get.find<BottomNavController>().selectedIndex.value == 1) {
+                                        final timelineController = Get.find<ContainerController>();
+                                        timelineController.scrollToSelectedMeeting();
+                                      }
+                                    });
                                   }
                                 },
                                 onPageChanged: (focusedDay) {

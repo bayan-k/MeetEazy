@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:hive/hive.dart';
 import 'package:meetingreminder/shared_widgets/custom_snackbar.dart';
@@ -9,6 +10,10 @@ class ContainerController extends GetxController {
   final String boxName = 'ContainerData';
   late Box<ContainerData> _box;
   late final NotificationService _notificationService;
+  
+  // Add selected date tracker
+  Rx<DateTime?> selectedDate = Rx<DateTime?>(null);
+  final ScrollController scrollController = ScrollController();
 
   @override
   void onInit() {
@@ -117,7 +122,7 @@ class ContainerController extends GetxController {
       await _notificationService.showNotification(
         id: -key, // Use negative key to avoid conflict with scheduled notification
         title: 'Meeting Scheduled',
-        body: 'You will be notified 30 minutes before the meeting at ${value2}',
+        body: 'Meeting scheduled for ${value2}. You will be notified 10 minutes before the meeting.',
       );
     } catch (e) {
       print('Error storing container data: $e');
@@ -159,6 +164,51 @@ class ContainerController extends GetxController {
              meeting.date.month == now.month &&
              meeting.date.day == now.day;
     }).toList();
+  }
+
+  // Add method to set selected date
+  void setSelectedDate(DateTime? date) {
+    selectedDate.value = date;
+    update();
+  }
+
+  void scrollToSelectedMeeting() {
+    if (containerList.isEmpty || selectedDate.value == null) return;
+
+    // Find the index of the first meeting from selected date
+    final index = containerList.indexWhere(
+      (meeting) => isMeetingFromSelectedDate(meeting)
+    );
+    
+    if (index != -1) {
+      // Calculate approximate position (each card is about 160 pixels high + 12 margin)
+      final position = index * 172.0;
+      
+      // Animate to the position
+      scrollController.animateTo(
+        position,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  // Add method to get meetings for selected date
+  List<ContainerData> getSelectedDateMeetings() {
+    if (selectedDate.value == null) return [];
+    return containerList.where((meeting) {
+      return meeting.date.year == selectedDate.value!.year &&
+             meeting.date.month == selectedDate.value!.month &&
+             meeting.date.day == selectedDate.value!.day;
+    }).toList();
+  }
+
+  // Add method to check if a meeting is from selected date
+  bool isMeetingFromSelectedDate(ContainerData meeting) {
+    if (selectedDate.value == null) return false;
+    return meeting.date.year == selectedDate.value!.year &&
+           meeting.date.month == selectedDate.value!.month &&
+           meeting.date.day == selectedDate.value!.day;
   }
 
   @override

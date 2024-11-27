@@ -24,16 +24,45 @@ class NotificationService extends GetxService {
       final String timeZoneName = tz.local.name;
       tz.setLocalLocation(tz.getLocation(timeZoneName));
 
+      // Create notification channel for Android
+      const AndroidNotificationChannel channel = AndroidNotificationChannel(
+        'meeting_reminder',
+        'Meeting Reminders',
+        description: 'Notifications for upcoming meetings',
+        importance: Importance.max,
+        enableVibration: true,
+        playSound: true,
+        showBadge: true,
+      );
+
+      // Create the channel on Android
+      await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin>()
+          ?.createNotificationChannel(channel);
+
       // Initialize notification settings for Android
       const AndroidInitializationSettings initializationSettingsAndroid =
           AndroidInitializationSettings('@mipmap/ic_launcher');
 
-      // Initialize notification settings for iOS with permission requests
+      // Initialize notification settings for iOS
       final DarwinInitializationSettings initializationSettingsIOS =
           DarwinInitializationSettings(
         requestSoundPermission: true,
         requestBadgePermission: true,
         requestAlertPermission: true,
+        notificationCategories: [
+          DarwinNotificationCategory(
+            'meeting_reminder',
+            actions: [
+              DarwinNotificationAction.plain('view', 'View Meeting'),
+              DarwinNotificationAction.plain('snooze', 'Snooze'),
+            ],
+            options: {
+              DarwinNotificationCategoryOption.hiddenPreviewShowTitle,
+            },
+          ),
+        ],
       );
 
       // Combine platform-specific settings
@@ -56,13 +85,16 @@ class NotificationService extends GetxService {
             alert: true,
             badge: true,
             sound: true,
+            critical: true,
           );
-    } catch (e) {
+          
+      print('Notification service initialized successfully');
+    } catch (e, stackTrace) {
       print('Error initializing notifications: $e');
+      print('Stack trace: $stackTrace');
     }
   }
 
-  // Handle notification taps
   void onDidReceiveNotificationResponse(NotificationResponse response) {
     // Handle notification tap
     if (response.payload != null) {
@@ -70,7 +102,6 @@ class NotificationService extends GetxService {
     }
   }
 
-  // Schedule a meeting notification
   Future<void> scheduleMeetingNotification({
     required int id,
     required String title,
@@ -78,68 +109,67 @@ class NotificationService extends GetxService {
     required DateTime meetingTime,
   }) async {
     try {
-      // Calculate notification time (30 minutes before meeting)
-      final notificationTime = meetingTime.subtract(const Duration(minutes: 5));
+      // Calculate notification time (10 minutes before meeting)
+      final notificationTime = meetingTime.subtract(const Duration(minutes: 10));
+      final now = DateTime.now();
 
-      // Convert to TZDateTime
-      final scheduledDate = tz.TZDateTime.from(notificationTime, tz.local);
+      // Debug prints
+      print('Current time: $now');
+      print('Meeting time: $meetingTime');
+      print('Scheduled notification time: $notificationTime');
 
       // Check if the notification time hasn't passed yet
-      if (scheduledDate.isAfter(tz.TZDateTime.now(tz.local))) {
-        // Android notification details with custom sound and full-screen intent
-        final AndroidNotificationDetails androidPlatformChannelSpecifics =
-            AndroidNotificationDetails(
-          'meeting_channel',
-          'Meeting Notifications',
+      if (notificationTime.isAfter(now)) {
+        // Convert to TZDateTime
+        final scheduledDate = tz.TZDateTime.from(notificationTime, tz.local);
+
+        // Android notification details
+        final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+          'meeting_reminder',
+          'Meeting Reminders',
           channelDescription: 'Notifications for upcoming meetings',
           importance: Importance.max,
-          priority: Priority.high,
-          showWhen: true,
-          enableVibration: true,
-          enableLights: true,
+          priority: Priority.max,
           fullScreenIntent: true,
-          styleInformation: BigTextStyleInformation(''),
-          sound: RawResourceAndroidNotificationSound('notification_sound'),
           category: AndroidNotificationCategory.alarm,
+          visibility: NotificationVisibility.public,
+          autoCancel: false,
+          ongoing: true,
+          styleInformation: BigTextStyleInformation(
+            'Your meeting "$description" starts in 10 minutes!\n\nTime: ${_formatTime(meetingTime)}',
+            htmlFormatBigText: true,
+            contentTitle: 'Upcoming Meeting: $title',
+            htmlFormatContentTitle: true,
+          ),
         );
 
-        // iOS notification details with custom sound
-        const DarwinNotificationDetails iOSPlatformChannelSpecifics =
-            DarwinNotificationDetails(
+        // iOS notification details
+        const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
           presentAlert: true,
           presentBadge: true,
           presentSound: true,
-          sound: 'notification_sound.aiff',
           interruptionLevel: InterruptionLevel.timeSensitive,
         );
-
-        // Combine platform-specific details
-        NotificationDetails platformChannelSpecifics = NotificationDetails(
-          android: androidPlatformChannelSpecifics,
-          iOS: iOSPlatformChannelSpecifics,
-        );
-
-        // Cancel any existing notification with the same ID
-        await cancelNotification(id);
 
         // Schedule the notification
         await flutterLocalNotificationsPlugin.zonedSchedule(
           id,
           'Upcoming Meeting: $title',
-          'Your meeting "$description" starts in 5 minutes!\n\nTime: ${_formatTime(meetingTime)}',
+          'Your meeting "$description" starts in 10 minutes!\n\nTime: ${_formatTime(meetingTime)}',
           scheduledDate,
-          platformChannelSpecifics,
+          NotificationDetails(android: androidDetails, iOS: iosDetails),
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
+          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
         );
 
-        print('Notification scheduled for: ${scheduledDate.toString()}');
+        print('Successfully scheduled notification for $scheduledDate');
       } else {
-        print('Notification time has already passed: ${scheduledDate.toString()}');
+        print('Cannot schedule notification: Time has already passed');
+        print('Attempted schedule time was: $notificationTime');
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
       print('Error scheduling notification: $e');
+      print('Stack trace: $stackTrace');
     }
   }
 
@@ -158,8 +188,8 @@ class NotificationService extends GetxService {
     String? payload,
   }) async {
     const androidDetails = AndroidNotificationDetails(
-      'meeting_channel',
-      'Meeting Notifications',
+      'meeting_reminder',
+      'Meeting Reminders',
       channelDescription: 'Channel for meeting notifications',
       importance: Importance.high,
       priority: Priority.high,

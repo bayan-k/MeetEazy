@@ -129,8 +129,8 @@ class TimePickerController extends GetxController {
     // Get meeting type or use default with counter
     String meetingType = remarkController.value.text.trim();
     if (meetingType.isEmpty) {
-      meetingCounter.increment();
-      meetingType = 'Meeting ${meetingCounter.counter.value}';
+      // Format the date as 'MMM -dd'
+      meetingType = 'Meeting on ${DateFormat('MMM -dd').format(selectedDate.value)}';
     }
 
     // Parse the start time

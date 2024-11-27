@@ -18,13 +18,11 @@ Future<void> initHive() async {
 void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
+    await AndroidAlarmManager.initialize();
     
     // Initialize Hive first
     await initHive();
     
-    // Initialize other services
-    await AndroidAlarmManager.initialize();
-
     runApp(
       GetMaterialApp(
         debugShowCheckedModeBanner: false,
