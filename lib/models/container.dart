@@ -28,6 +28,12 @@ class ContainerData extends HiveObject {
   @HiveField(7)
   String formattedDate;
 
+  @HiveField(8)
+  String agenda;
+
+  @HiveField(9)
+  List<String> minutes;
+
   ContainerData({
     required this.key1,
     required this.value1,
@@ -37,7 +43,9 @@ class ContainerData extends HiveObject {
     required this.value3,
     required this.date,
     required this.formattedDate,
-  });
+    this.agenda = '',
+    List<String>? minutes,
+  }) : minutes = minutes ?? [];
 
   // Add operator overloading for map-like access
   dynamic operator [](String key) {
@@ -50,8 +58,10 @@ class ContainerData extends HiveObject {
         return value3;
       case 'date':
         return date;
-      case 'formattedDate':
-        return formattedDate;
+      case 'agenda':
+        return agenda;
+      case 'minutes':
+        return minutes;
       default:
         return null;
     }

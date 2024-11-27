@@ -53,53 +53,14 @@ class ContainerController extends GetxController {
     return countMap;
   }
 
-  Future<void> storeContainerData(
-    String key1,
-    String value1,
-    String key2,
-    String value2,
-    String key3,
-    String value3,
-    DateTime date,
-    String formattedDate,
-  ) async {
+  void storeContainerData(ContainerData containerData) async {
     try {
-      // Create the container data
-      final containerData = ContainerData(
-        key1: key1,
-        value1: value1,
-        key2: key2,
-        value2: value2,
-        key3: key3,
-        value3: value3,
-        date: date,
-        formattedDate: formattedDate,
-      );
-
-      // Add to Hive box
-      final int key = await _box.add(containerData);
-      await loadContainerData();
-
-      // Schedule notification
-      await _notificationService.scheduleMeetingNotification(
-        id: key,
-        title: value1,
-        description: "Meeting at ${value2}",
-        meetingTime: date,
-      );
-
+      final box = await Hive.openBox<ContainerData>('containerBox');
+      await box.add(containerData);
+      containerList.add(containerData);
       update();
-      CustomSnackbar.showSuccess('Meeting added successfully');
-      
-      // Show immediate confirmation
-      await _notificationService.showNotification(
-        id: -key,
-        title: 'Meeting Scheduled',
-        body: 'Meeting scheduled for ${value2}. You will be notified 10 minutes before the meeting.',
-      );
     } catch (e) {
-      print('Error storing container data: $e');
-      CustomSnackbar.showError('Error adding meeting');
+      print("Error storing container data: $e");
     }
   }
 
@@ -214,6 +175,45 @@ class ContainerController extends GetxController {
     return meeting.date.year == selectedDate.value!.year &&
            meeting.date.month == selectedDate.value!.month &&
            meeting.date.day == selectedDate.value!.day;
+  }
+
+  Future<void> addMinute(ContainerData containerData, String minute) async {
+    try {
+      containerData.minutes.add(minute);
+      await containerData.save();
+      update();
+      CustomSnackbar.showSuccess('Minute added successfully');
+    } catch (e) {
+      print("Error adding minute: $e");
+      CustomSnackbar.showError('Error adding minute');
+    }
+  }
+
+  Future<void> deleteMinute(ContainerData containerData, int index) async {
+    try {
+      containerData.minutes.removeAt(index);
+      await containerData.save();
+      update();
+      CustomSnackbar.showSuccess('Minute deleted successfully');
+    } catch (e) {
+      print("Error deleting minute: $e");
+      CustomSnackbar.showError('Error deleting minute');
+    }
+  }
+
+  Future<void> updateAgenda(ContainerData meeting, String newAgenda) async {
+    try {
+      final index = containerList.indexOf(meeting);
+      if (index != -1) {
+        meeting.agenda = newAgenda;
+        await meeting.save();
+        update();
+        CustomSnackbar.showSuccess('Agenda updated successfully');
+      }
+    } catch (e) {
+      print('Error updating agenda: $e');
+      CustomSnackbar.showError('Failed to update agenda');
+    }
   }
 
   @override

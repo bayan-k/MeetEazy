@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:meetingreminder/app/modules/homepage/controllers/bottom_nav_controller.dart';
 import 'package:meetingreminder/app/modules/homepage/controllers/container_controller.dart';
 import 'package:meetingreminder/app/modules/homepage/controllers/timepicker_controller.dart';
+import 'package:meetingreminder/models/container.dart';
 import 'package:meetingreminder/shared_widgets/meeting_setter_box.dart';
 import 'package:meetingreminder/shared_widgets/confirm_dialog.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -590,15 +591,67 @@ class _HomePageViewState extends State<HomePageView> {
                                           crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             // Meeting Type with Overflow Protection
-                                            Text(
-                                              containerController.containerList[index].value1,
-                                              style: const TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                                color: Color(0xFF2E3147),
-                                              ),
-                                              maxLines: 2,
-                                              overflow: TextOverflow.ellipsis,
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    meeting.value1,
+                                                    style: const TextStyle(
+                                                      fontSize: 18,
+                                                      fontWeight: FontWeight.bold,
+                                                      color: Color(0xFF2E3147),
+                                                    ),
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    // Minutes Button
+                                                    IconButton(
+                                                      onPressed: () => _showMinutesDialog(context, meeting),
+                                                      icon: Stack(
+                                                        clipBehavior: Clip.none,
+                                                        children: [
+                                                          const Icon(
+                                                            Icons.note_add,
+                                                            color: Color(0xFF9B4DCA),
+                                                          ),
+                                                          if (meeting.minutes.isNotEmpty)
+                                                            Positioned(
+                                                              right: -8,
+                                                              top: -8,
+                                                              child: Container(
+                                                                padding: const EdgeInsets.all(4),
+                                                                decoration: const BoxDecoration(
+                                                                  color: Color(0xFF9B4DCA),
+                                                                  shape: BoxShape.circle,
+                                                                ),
+                                                                child: Text(
+                                                                  meeting.minutes.length.toString(),
+                                                                  style: const TextStyle(
+                                                                    color: Colors.white,
+                                                                    fontSize: 10,
+                                                                    fontWeight: FontWeight.bold,
+                                                                  ),
+                                                                ),
+                                                              ),
+                                                            ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    // Delete Button
+                                                    IconButton(
+                                                      icon: Icon(
+                                                        Icons.delete_outline,
+                                                        color: Colors.red[400],
+                                                      ),
+                                                      onPressed: () => _handleDelete(context, index),
+                                                      splashRadius: 24,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ],
                                             ),
                                             const SizedBox(height: 8),
                                             
@@ -621,7 +674,7 @@ class _HomePageViewState extends State<HomePageView> {
                                                           const SizedBox(width: 4),
                                                           Expanded(
                                                             child: Text(
-                                                              'Start: ${containerController.containerList[index].value2}',
+                                                              'Start: ${meeting.value2}',
                                                               style: TextStyle(
                                                                 fontSize: 14,
                                                                 color: Colors.grey[700],
@@ -645,7 +698,7 @@ class _HomePageViewState extends State<HomePageView> {
                                                           const SizedBox(width: 4),
                                                           Expanded(
                                                             child: Text(
-                                                              'End: ${containerController.containerList[index].value3}',
+                                                              'End: ${meeting.value3}',
                                                               style: TextStyle(
                                                                 fontSize: 14,
                                                                 color: Colors.grey[700],
@@ -674,9 +727,7 @@ class _HomePageViewState extends State<HomePageView> {
                                                     ),
                                                   ),
                                                   child: Text(
-                                                    containerController
-                                                        .containerList[index]
-                                                        .formattedDate,
+                                                    meeting.formattedDate,
                                                     style: TextStyle(
                                                       fontSize: 12,
                                                       color: Colors.purple[700],
@@ -687,41 +738,6 @@ class _HomePageViewState extends State<HomePageView> {
                                               ],
                                             ),
                                           ],
-                                        ),
-                                      ),
-                                      
-                                      // Delete Button
-                                      Positioned(
-                                        right: 8,
-                                        top: 8,
-                                        child: Material(
-                                          color: Colors.transparent,
-                                          child: PopupMenuButton<String>(
-                                            onSelected: (value) async {
-                                              if (value == 'Delete') {
-                                                bool confirm = await ConfirmDialog.show(context);
-                                                if (confirm) {
-                                                  timePickerController.handleDelete(index);
-                                                }
-                                              }
-                                            },
-                                            itemBuilder: (BuildContext context) {
-                                              return [
-                                                PopupMenuItem(
-                                                  value: 'Delete',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.delete, color: Colors.red[400], size: 20),
-                                                      const SizedBox(width: 8),
-                                                      Text('Delete',
-                                                          style: TextStyle(color: Colors.red[400])),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ];
-                                            },
-                                            icon: const Icon(Icons.more_vert, color: Colors.grey),
-                                          ),
                                         ),
                                       ),
                                     ],
@@ -804,39 +820,124 @@ class _HomePageViewState extends State<HomePageView> {
           Positioned(
             bottom: 80,
             right: 20,
-            child: GestureDetector(
-              onTap: () {
-                Get.dialog(buildReminderBox(context));
+            child: FloatingActionButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => const MeetingSetterBox(),
+                );
               },
-              child: Container(
-                height: 60,
-                width: 60,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.blue[400]!, Colors.blue[600]!],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(30),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.blue.withOpacity(0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
-                ),
-                child: const Icon(
-                  Icons.add,
-                  color: Colors.white,
-                  size: 30,
-                ),
-              ),
+              backgroundColor: const Color(0xFF9B4DCA),
+              child: const Icon(Icons.add),
             ),
           ),
         ],
       ),
     );
+  }
+
+  void _showMinutesDialog(BuildContext context, ContainerData meeting) {
+    final TextEditingController minuteController = TextEditingController();
+    final containerController = Get.find<ContainerController>();
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Meeting Minutes',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF2B3A67),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: minuteController,
+                decoration: InputDecoration(
+                  hintText: 'Enter minute point...',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.add),
+                    onPressed: () {
+                      if (minuteController.text.trim().isNotEmpty) {
+                        containerController.addMinute(meeting, minuteController.text.trim());
+                        minuteController.clear();
+                      }
+                    },
+                  ),
+                ),
+                onSubmitted: (value) {
+                  if (value.trim().isNotEmpty) {
+                    containerController.addMinute(meeting, value.trim());
+                    minuteController.clear();
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+              GetBuilder<ContainerController>(
+                builder: (controller) {
+                  final minutes = meeting.minutes;
+                  return minutes.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No minutes added yet',
+                            style: TextStyle(
+                              color: Colors.grey[600],
+                              fontSize: 14,
+                            ),
+                          ),
+                        )
+                      : SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.3,
+                          child: ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: minutes.length,
+                            itemBuilder: (context, index) {
+                              return ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: Icon(Icons.circle, size: 8, color: Colors.purple[400]),
+                                title: Text(minutes[index]),
+                                trailing: IconButton(
+                                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                  onPressed: () => containerController.deleteMinute(meeting, index),
+                                ),
+                              );
+                            },
+                          ),
+                        );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleDelete(BuildContext context, int index) async {
+    bool? confirm = await ConfirmDialog.show(context);
+    if (confirm == true) {
+      timePickerController.handleDelete(index);
+    }
   }
 }
 

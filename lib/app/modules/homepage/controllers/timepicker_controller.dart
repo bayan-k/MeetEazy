@@ -103,35 +103,27 @@ class TimePickerController extends GetxController {
     }
   }
 
-  void storeMeetingData() {
+  void storeMeetingData(String agenda, List<String> minutes) {
     try {
       if (startTime.value.isEmpty || endTime.value.isEmpty) {
         CustomSnackbar.showError("Please select both start and end times");
         return;
       }
 
-      // Get meeting type or use default with counter
-      String meetingType = remarkController.text.trim();
-      if (meetingType.isEmpty) {
-        meetingType = 'Meeting on ${DateFormat('MMM dd').format(selectedDate.value)}';
-      }
-
-      // Parse the start time
-      final DateTime meetingDateTime = _parseTimeToDateTime(startTime.value);
-
-      // Store the meeting data
-      containerController.storeContainerData(
-        'Meeting Type',
-        meetingType,
-        'Start Time',
-        startTime.value,
-        'End Time',
-        endTime.value,
-        meetingDateTime,
-        formattedDate.value.isEmpty 
-            ? DateFormat('MMM d, y').format(selectedDate.value)
-            : formattedDate.value,
+      final containerData = ContainerData(
+        key1: "Meeting Type",
+        value1: remarkController.text.isEmpty ? "General Meeting" : remarkController.text,
+        key2: "Start Time",
+        value2: startTime.value,
+        key3: "End Time",
+        value3: endTime.value,
+        date: selectedDate.value,
+        formattedDate: formattedDate.value,
+        agenda: agenda,
+        minutes: minutes,
       );
+
+      containerController.storeContainerData(containerData);
 
       _resetForm();
       CustomSnackbar.showSuccess("Meeting scheduled successfully");
