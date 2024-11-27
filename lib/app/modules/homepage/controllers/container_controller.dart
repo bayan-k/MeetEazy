@@ -80,39 +80,12 @@ class ContainerController extends GetxController {
       final int key = await _box.add(containerData);
       await loadContainerData();
 
-      // Parse the time strings to create proper DateTime
-      final timeStrings = [value2, value3]; // Start and end times
-      final startTimeStr = value2;
-      
-      // Parse time string (assuming format like "2:30 PM")
-      final timeParts = startTimeStr.split(' ');
-      final time = timeParts[0].split(':');
-      int hours = int.parse(time[0]);
-      final minutes = int.parse(time[1]);
-      final isPM = timeParts[1].toUpperCase() == 'PM';
-
-      // Convert to 24-hour format
-      if (isPM && hours != 12) {
-        hours += 12;
-      } else if (!isPM && hours == 12) {
-        hours = 0;
-      }
-
-      // Create DateTime with the correct time
-      final meetingDateTime = DateTime(
-        date.year,
-        date.month,
-        date.day,
-        hours,
-        minutes,
-      );
-
       // Schedule notification
       await _notificationService.scheduleMeetingNotification(
-        id: key,  // Using Hive object key as notification ID
+        id: key,
         title: value1,
         description: "Meeting at ${value2}",
-        meetingTime: meetingDateTime,
+        meetingTime: date,
       );
 
       update();
@@ -120,7 +93,7 @@ class ContainerController extends GetxController {
       
       // Show immediate confirmation
       await _notificationService.showNotification(
-        id: -key, // Use negative key to avoid conflict with scheduled notification
+        id: -key,
         title: 'Meeting Scheduled',
         body: 'Meeting scheduled for ${value2}. You will be notified 10 minutes before the meeting.',
       );
@@ -134,11 +107,28 @@ class ContainerController extends GetxController {
     try {
       final loadedData = _box.values.toList();
       
-      // Sort meetings by date and time
-      loadedData.sort((a, b) => a.date.compareTo(b.date));
+      // Remove past meetings that are more than a day old
+      final now = DateTime.now();
+      final yesterday = DateTime(now.year, now.month, now.day - 1);
       
-      containerList.assignAll(loadedData); // Use assignAll instead of value
-      update(); // Force UI update
+      // Keep only future meetings and today's meetings
+      final filteredData = loadedData.where((meeting) => 
+        meeting.date.isAfter(yesterday)
+      ).toList();
+      
+      // Delete past meetings from storage
+      for (var i = 0; i < _box.length; i++) {
+        final meeting = _box.getAt(i);
+        if (meeting != null && meeting.date.isBefore(yesterday)) {
+          await _box.deleteAt(i);
+        }
+      }
+      
+      // Sort meetings by date and time
+      filteredData.sort((a, b) => a.date.compareTo(b.date));
+      
+      containerList.assignAll(filteredData);
+      update();
     } catch (e) {
       print('Error loading data: $e');
       CustomSnackbar.showError('Failed to load meetings');
@@ -147,10 +137,30 @@ class ContainerController extends GetxController {
 
   Future<void> deleteContainerData(int index) async {
     try {
-      await _box.deleteAt(index);
-      await loadContainerData();
-      update(); // Force UI update
-      CustomSnackbar.showSuccess('Meeting deleted successfully');
+      // Get the meeting at the index
+      final meeting = containerList[index];
+      
+      // Find the box index for this meeting
+      int? boxIndex;
+      for (var i = 0; i < _box.length; i++) {
+        final boxMeeting = _box.getAt(i);
+        if (boxMeeting != null && 
+            boxMeeting.date == meeting.date && 
+            boxMeeting.value1 == meeting.value1 && 
+            boxMeeting.value2 == meeting.value2) {
+          boxIndex = i;
+          break;
+        }
+      }
+
+      if (boxIndex != null) {
+        await _box.deleteAt(boxIndex);
+        await loadContainerData();
+        update();
+        CustomSnackbar.showSuccess('Meeting deleted successfully');
+      } else {
+        throw Exception('Meeting not found in storage');
+      }
     } catch (e) {
       print('Error deleting data: $e');
       CustomSnackbar.showError('Failed to delete meeting: ${e.toString()}');
@@ -159,14 +169,15 @@ class ContainerController extends GetxController {
 
   List<ContainerData> getTodayMeetings() {
     final now = DateTime.now();
+    final startOfDay = DateTime(now.year, now.month, now.day);
+    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    
     return containerList.where((meeting) {
-      return meeting.date.year == now.year &&
-             meeting.date.month == now.month &&
-             meeting.date.day == now.day;
+      return meeting.date.isAfter(startOfDay.subtract(const Duration(minutes: 1))) &&
+             meeting.date.isBefore(endOfDay.add(const Duration(minutes: 1)));
     }).toList();
   }
 
-  // Add method to set selected date
   void setSelectedDate(DateTime? date) {
     selectedDate.value = date;
     update();
@@ -175,16 +186,12 @@ class ContainerController extends GetxController {
   void scrollToSelectedMeeting() {
     if (containerList.isEmpty || selectedDate.value == null) return;
 
-    // Find the index of the first meeting from selected date
     final index = containerList.indexWhere(
       (meeting) => isMeetingFromSelectedDate(meeting)
     );
     
     if (index != -1) {
-      // Calculate approximate position (each card is about 160 pixels high + 12 margin)
       final position = index * 172.0;
-      
-      // Animate to the position
       scrollController.animateTo(
         position,
         duration: const Duration(milliseconds: 500),
@@ -193,7 +200,6 @@ class ContainerController extends GetxController {
     }
   }
 
-  // Add method to get meetings for selected date
   List<ContainerData> getSelectedDateMeetings() {
     if (selectedDate.value == null) return [];
     return containerList.where((meeting) {
@@ -203,7 +209,6 @@ class ContainerController extends GetxController {
     }).toList();
   }
 
-  // Add method to check if a meeting is from selected date
   bool isMeetingFromSelectedDate(ContainerData meeting) {
     if (selectedDate.value == null) return false;
     return meeting.date.year == selectedDate.value!.year &&
@@ -213,9 +218,7 @@ class ContainerController extends GetxController {
 
   @override
   void onClose() {
-    // Don't cancel all notifications when controller closes
-    // Only cancel when explicitly requested
-    _box.close();
+    scrollController.dispose();
     super.onClose();
   }
 }
