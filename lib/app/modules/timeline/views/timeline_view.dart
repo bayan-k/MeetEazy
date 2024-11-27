@@ -15,9 +15,11 @@ class TimelineView extends StatefulWidget {
 }
 
 class _TimelineViewState extends State<TimelineView> {
-  final containerController = Get.find<ContainerController>();
-  final timePickerController = Get.find<TimePickerController>();
-  final meetingCounter = Get.find<MeetingCounter>();
+  final ContainerController containerController = Get.find<ContainerController>();
+  final BottomNavController bottomNavController = Get.find<BottomNavController>();
+  final MeetingCounter meetingCounter = Get.find<MeetingCounter>();
+  final TimePickerController timePickerController =
+      Get.find<TimePickerController>();
 
   @override
   void initState() {
@@ -365,167 +367,264 @@ class _TimelineViewState extends State<TimelineView> {
                                 ),
                               ],
                             ),
-                            child: Container(
-                              margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Timeline indicator with pulse animation
-                                  Column(
-                                    children: [
-                                      TweenAnimationBuilder<double>(
-                                        tween: Tween<double>(begin: 0.8, end: 1.2),
-                                        duration: const Duration(milliseconds: 1500),
-                                        curve: Curves.easeInOut,
-                                        builder: (context, scale, child) {
-                                          return Transform.scale(
-                                            scale: scale,
-                                            child: Container(
-                                              width: 20,
-                                              height: 20,
-                                              decoration: BoxDecoration(
-                                                gradient: LinearGradient(
-                                                  colors: isSelectedDateMeeting
-                                                      ? [Colors.white, Colors.white70]
-                                                      : [Color(0xFF9B4DCA), Color(0xFF9B4DCA).withOpacity(0.7)],
-                                                  begin: Alignment.topLeft,
-                                                  end: Alignment.bottomRight,
-                                                ),
-                                                shape: BoxShape.circle,
-                                                boxShadow: [
-                                                  BoxShadow(
-                                                    color: isSelectedDateMeeting
-                                                        ? Colors.white.withOpacity(0.5)
-                                                        : Color(0xFF9B4DCA).withOpacity(0.3),
-                                                    blurRadius: 8,
-                                                    spreadRadius: 2,
+                            child: Theme(
+                              data: Theme.of(context).copyWith(
+                                dividerColor: Colors.transparent,
+                                colorScheme: ColorScheme.light(
+                                  primary: isSelectedDateMeeting ? Colors.white : Colors.purple[700]!,
+                                ),
+                              ),
+                              child: ExpansionTile(
+                                tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                title: Row(
+                                  children: [
+                                    // Timeline indicator with pulse animation
+                                    Column(
+                                      children: [
+                                        TweenAnimationBuilder<double>(
+                                          tween: Tween<double>(begin: 0.8, end: 1.2),
+                                          duration: const Duration(milliseconds: 1500),
+                                          curve: Curves.easeInOut,
+                                          builder: (context, scale, child) {
+                                            return Transform.scale(
+                                              scale: scale,
+                                              child: Container(
+                                                width: 20,
+                                                height: 20,
+                                                decoration: BoxDecoration(
+                                                  gradient: LinearGradient(
+                                                    colors: isSelectedDateMeeting
+                                                        ? [Colors.white, Colors.white70]
+                                                        : [Color(0xFF9B4DCA), Color(0xFF9B4DCA).withOpacity(0.7)],
+                                                    begin: Alignment.topLeft,
+                                                    end: Alignment.bottomRight,
                                                   ),
-                                                ],
+                                                  shape: BoxShape.circle,
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: isSelectedDateMeeting
+                                                          ? Colors.white.withOpacity(0.5)
+                                                          : Color(0xFF9B4DCA).withOpacity(0.3),
+                                                      blurRadius: 8,
+                                                      spreadRadius: 2,
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+                                          },
+                                        ),
+                                        Container(
+                                          width: 2,
+                                          height: 40,
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: isSelectedDateMeeting
+                                                  ? [Colors.white, Colors.white70]
+                                                  : [Color(0xFF9B4DCA), Color(0xFF9B4DCA).withOpacity(0.3)],
+                                              begin: Alignment.topCenter,
+                                              end: Alignment.bottomCenter,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(width: 20),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            meeting.value1,
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                              color: isSelectedDateMeeting ? Colors.white : Color(0xFF2E3147),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.access_time,
+                                                color: isSelectedDateMeeting ? Colors.white70 : Colors.purple[300],
+                                                size: 16,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                '${meeting.value2} - ${meeting.value3}',
+                                                style: TextStyle(
+                                                  color: isSelectedDateMeeting ? Colors.white : Colors.grey[700],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: isSelectedDateMeeting
+                                                  ? Colors.white.withOpacity(0.2)
+                                                  : Colors.purple[50],
+                                              borderRadius: BorderRadius.circular(12),
+                                            ),
+                                            child: Text(
+                                              meeting.formattedDate,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: isSelectedDateMeeting ? Colors.white : Colors.purple[700],
+                                                fontWeight: FontWeight.w500,
                                               ),
                                             ),
-                                          );
-                                        },
-                                      ),
-                                      Container(
-                                        width: 2,
-                                        height: 100,
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: isSelectedDateMeeting
-                                                ? [Colors.white, Colors.white70]
-                                                : [Color(0xFF9B4DCA), Color(0xFF9B4DCA).withOpacity(0.3)],
-                                            begin: Alignment.topCenter,
-                                            end: Alignment.bottomCenter,
                                           ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                trailing: Container(
+                                  width: 110,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      if (meeting.minutes.isNotEmpty) ...[
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: isSelectedDateMeeting ? Colors.white.withOpacity(0.2) : Colors.purple[100],
+                                            borderRadius: BorderRadius.circular(12),
+                                          ),
+                                          child: Text(
+                                            '${meeting.minutes.length}',
+                                            style: TextStyle(
+                                              color: isSelectedDateMeeting ? Colors.white : Colors.purple[700],
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 4),
+                                      ],
+                                      SizedBox(
+                                        width: 28,
+                                        height: 28,
+                                        child: IconButton(
+                                          padding: EdgeInsets.zero,
+                                          icon: Icon(
+                                            Icons.edit_note,
+                                            color: isSelectedDateMeeting ? Colors.white : Colors.purple[400],
+                                            size: 24,
+                                          ),
+                                          onPressed: () => _showMinutesDialog(context, meeting),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      SizedBox(
+                                        width: 28,
+                                        height: 28,
+                                        child: IconButton(
+                                          padding: EdgeInsets.zero,
+                                          icon: Icon(
+                                            Icons.delete_outline,
+                                            color: isSelectedDateMeeting ? Colors.white70 : Colors.red[400],
+                                            size: 20,
+                                          ),
+                                          onPressed: () => _showDeleteDialog(context, index),
                                         ),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(width: 20),
-                                  // Meeting Content
-                                  Expanded(
+                                ),
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.5),
+                                      borderRadius: const BorderRadius.only(
+                                        bottomLeft: Radius.circular(16),
+                                        bottomRight: Radius.circular(16),
+                                      ),
+                                    ),
+                                    padding: const EdgeInsets.all(20),
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        // Meeting Title and Actions Row
                                         Row(
                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Expanded(
-                                              child: Text(
-                                                meeting.value1,
-                                                style: TextStyle(
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: isSelectedDateMeeting ? Colors.white : Color(0xFF2E3147),
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                            Row(
-                                              children: [
-                                                // Minutes Button
-                                                IconButton(
-                                                  onPressed: () => _showMinutesDialog(context, meeting),
-                                                  icon: Stack(
-                                                    clipBehavior: Clip.none,
-                                                    children: [
-                                                      Icon(
-                                                        Icons.note_add,
-                                                        color: isSelectedDateMeeting ? Colors.white : Color(0xFF9B4DCA),
-                                                      ),
-                                                      if (meeting.minutes.isNotEmpty)
-                                                        Positioned(
-                                                          right: -8,
-                                                          top: -8,
-                                                          child: Container(
-                                                            padding: const EdgeInsets.all(4),
-                                                            decoration: BoxDecoration(
-                                                              color: isSelectedDateMeeting ? Colors.white : Color(0xFF9B4DCA),
-                                                              shape: BoxShape.circle,
-                                                            ),
-                                                            child: Text(
-                                                              meeting.minutes.length.toString(),
-                                                              style: TextStyle(
-                                                                color: isSelectedDateMeeting ? Color(0xFF9B4DCA) : Colors.white,
-                                                                fontSize: 10,
-                                                                fontWeight: FontWeight.bold,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                // Delete Button
-                                                IconButton(
-                                                  icon: Icon(
-                                                    Icons.delete_outline,
-                                                    color: isSelectedDateMeeting ? Colors.white70 : Colors.red[400],
-                                                  ),
-                                                  onPressed: () => _showDeleteDialog(context, index),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 8),
-                                        // Meeting Time Details
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.access_time,
-                                              color: isSelectedDateMeeting ? Colors.white70 : Colors.purple[300],
-                                              size: 16,
-                                            ),
-                                            const SizedBox(width: 8),
                                             Text(
-                                              '${meeting.value2} - ${meeting.value3}',
+                                              'Meeting Minutes',
                                               style: TextStyle(
-                                                color: isSelectedDateMeeting ? Colors.white : Colors.grey[700],
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                                color: Colors.purple[700],
                                               ),
+                                            ),
+                                            IconButton(
+                                              icon: Icon(
+                                                Icons.add_circle,
+                                                color: Colors.purple[400],
+                                              ),
+                                              onPressed: () => _showMinutesDialog(context, meeting),
                                             ),
                                           ],
                                         ),
-                                        const SizedBox(height: 8),
-                                        // Meeting Date
-                                        Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: isSelectedDateMeeting
-                                                ? Colors.white.withOpacity(0.2)
-                                                : Colors.purple[50],
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          child: Text(
-                                            meeting.formattedDate,
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: isSelectedDateMeeting ? Colors.white : Colors.purple[700],
-                                              fontWeight: FontWeight.w500,
+                                        const SizedBox(height: 12),
+                                        if (meeting.minutes.isEmpty)
+                                          Center(
+                                            child: Padding(
+                                              padding: const EdgeInsets.all(16.0),
+                                              child: Text(
+                                                'No minutes added yet',
+                                                style: TextStyle(
+                                                  color: Colors.grey[600],
+                                                  fontSize: 14,
+                                                ),
+                                              ),
                                             ),
+                                          )
+                                        else
+                                          ListView.builder(
+                                            shrinkWrap: true,
+                                            physics: const NeverScrollableScrollPhysics(),
+                                            itemCount: meeting.minutes.length,
+                                            itemBuilder: (context, minuteIndex) {
+                                              return Padding(
+                                                padding: const EdgeInsets.only(bottom: 8),
+                                                child: Row(
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.circle,
+                                                      size: 8,
+                                                      color: Colors.purple[400],
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    Expanded(
+                                                      child: Text(
+                                                        meeting.minutes[minuteIndex],
+                                                        style: const TextStyle(
+                                                          fontSize: 14,
+                                                          color: Color(0xFF2B3A67),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                    IconButton(
+                                                      icon: Icon(
+                                                        Icons.delete_outline,
+                                                        color: Colors.red[400],
+                                                        size: 20,
+                                                      ),
+                                                      onPressed: () => containerController.deleteMinute(meeting, minuteIndex),
+                                                    ),
+                                                  ],
+                                                ),
+                                              );
+                                            },
                                           ),
-                                        ),
                                       ],
                                     ),
                                   ),
@@ -621,6 +720,8 @@ class _TimelineViewState extends State<TimelineView> {
 
   @override
   void dispose() {
+    // Reset selected date when leaving timeline view
+    containerController.setSelectedDate(null);
     super.dispose();
   }
 }

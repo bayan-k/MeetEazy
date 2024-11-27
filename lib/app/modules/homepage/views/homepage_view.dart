@@ -37,6 +37,15 @@ class _HomePageViewState extends State<HomePageView> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    // Reset selected date when homepage is loaded
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      containerController.selectedDate.value = DateTime.now();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
@@ -554,199 +563,7 @@ class _HomePageViewState extends State<HomePageView> {
                       itemCount: todayMeetings.length,
                       itemBuilder: (context, index) {
                         final meeting = todayMeetings[index];
-                        return TweenAnimationBuilder<double>(
-                          duration: Duration(milliseconds: 300),
-                          tween: Tween(begin: 0.0, end: 1.0),
-                          builder: (context, value, child) {
-                            return Transform.translate(
-                              offset: Offset(0, 50 * (1 - value)),
-                              child: Opacity(
-                                opacity: value,
-                                child: Container(
-                                  margin: const EdgeInsets.only(bottom: 12),
-                                  decoration: BoxDecoration(
-                                    gradient: LinearGradient(
-                                      colors: [
-                                        Colors.purple[100]!,
-                                        Colors.purple[50]!,
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                                    borderRadius: BorderRadius.circular(16),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.1),
-                                        spreadRadius: 1,
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Stack(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.all(16.0),
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            // Meeting Type with Overflow Protection
-                                            Row(
-                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                              children: [
-                                                Expanded(
-                                                  child: Text(
-                                                    meeting.value1,
-                                                    style: const TextStyle(
-                                                      fontSize: 18,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: Color(0xFF2E3147),
-                                                    ),
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                                Row(
-                                                  children: [
-                                                    // Minutes Button
-                                                    IconButton(
-                                                      onPressed: () => _showMinutesDialog(context, meeting),
-                                                      icon: Stack(
-                                                        clipBehavior: Clip.none,
-                                                        children: [
-                                                          const Icon(
-                                                            Icons.note_add,
-                                                            color: Color(0xFF9B4DCA),
-                                                          ),
-                                                          if (meeting.minutes.isNotEmpty)
-                                                            Positioned(
-                                                              right: -8,
-                                                              top: -8,
-                                                              child: Container(
-                                                                padding: const EdgeInsets.all(4),
-                                                                decoration: const BoxDecoration(
-                                                                  color: Color(0xFF9B4DCA),
-                                                                  shape: BoxShape.circle,
-                                                                ),
-                                                                child: Text(
-                                                                  meeting.minutes.length.toString(),
-                                                                  style: const TextStyle(
-                                                                    color: Colors.white,
-                                                                    fontSize: 10,
-                                                                    fontWeight: FontWeight.bold,
-                                                                  ),
-                                                                ),
-                                                              ),
-                                                            ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                    // Delete Button
-                                                    IconButton(
-                                                      icon: Icon(
-                                                        Icons.delete_outline,
-                                                        color: Colors.red[400],
-                                                      ),
-                                                      onPressed: () => _handleDelete(context, index),
-                                                      splashRadius: 24,
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 8),
-                                            
-                                            // Meeting Details with Overflow Protection
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment.start,
-                                                    children: [
-                                                      // Start Time
-                                                      Row(
-                                                        children: [
-                                                          const Icon(
-                                                            Icons.access_time,
-                                                            size: 16,
-                                                            color: Colors.purple,
-                                                          ),
-                                                          const SizedBox(width: 4),
-                                                          Expanded(
-                                                            child: Text(
-                                                              'Start: ${meeting.value2}',
-                                                              style: TextStyle(
-                                                                fontSize: 14,
-                                                                color: Colors.grey[700],
-                                                              ),
-                                                              overflow:
-                                                                  TextOverflow.ellipsis,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                      const SizedBox(height: 4),
-                                                      
-                                                      // End Time
-                                                      Row(
-                                                        children: [
-                                                          const Icon(
-                                                            Icons.access_time_filled,
-                                                            size: 16,
-                                                            color: Colors.purple,
-                                                          ),
-                                                          const SizedBox(width: 4),
-                                                          Expanded(
-                                                            child: Text(
-                                                              'End: ${meeting.value3}',
-                                                              style: TextStyle(
-                                                                fontSize: 14,
-                                                                color: Colors.grey[700],
-                                                              ),
-                                                              overflow:
-                                                                  TextOverflow.ellipsis,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                
-                                                // Date Display
-                                                Container(
-                                                  padding: const EdgeInsets.symmetric(
-                                                      horizontal: 8, vertical: 4),
-                                                  decoration: BoxDecoration(
-                                                    color: Colors.purple[50],
-                                                    borderRadius:
-                                                        BorderRadius.circular(8),
-                                                    border: Border.all(
-                                                      color: Colors.purple[200]!,
-                                                      width: 1,
-                                                    ),
-                                                  ),
-                                                  child: Text(
-                                                    meeting.formattedDate,
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      color: Colors.purple[700],
-                                                      fontWeight: FontWeight.w500,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        );
+                        return _buildMeetingCard(meeting, index);
                       },
                     );
                   }),
@@ -836,100 +653,528 @@ class _HomePageViewState extends State<HomePageView> {
     );
   }
 
-  void _showMinutesDialog(BuildContext context, ContainerData meeting) {
-    final TextEditingController minuteController = TextEditingController();
-    final containerController = Get.find<ContainerController>();
-
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Meeting Minutes',
+  Widget _buildMeetingCard(ContainerData meeting, int index) {
+    return GetBuilder<ContainerController>(
+      builder: (controller) => Container(
+        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.purple[100]!,
+              Colors.purple[50]!,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.grey.withOpacity(0.1),
+              spreadRadius: 1,
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Theme(
+          data: Theme.of(context).copyWith(
+            dividerColor: Colors.transparent,
+            colorScheme: ColorScheme.light(
+              primary: Colors.purple[700]!,
+            ),
+          ),
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            title: Text(
+              meeting.value1,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Color(0xFF2E3147),
+              ),
+            ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.access_time,
+                      color: Colors.purple[300],
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${meeting.value2} - ${meeting.value3}',
+                      style: TextStyle(
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.purple.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    meeting.formattedDate,
                     style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF2B3A67),
+                      fontSize: 12,
+                      color: Colors.purple[700],
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
+                ),
+              ],
+            ),
+            trailing: SizedBox(
+              width: 120,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (meeting.minutes.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.purple[100],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '${meeting.minutes.length}',
+                        style: TextStyle(
+                          color: Colors.purple[700],
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
                   IconButton(
-                    icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
+                    icon: Icon(
+                      Icons.edit_note,
+                      color: Colors.purple[400],
+                      size: 28,
+                    ),
+                    onPressed: () => _showMinutesDialog(context, meeting),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.delete_outline,
+                      color: Colors.red[400],
+                      size: 24,
+                    ),
+                    onPressed: () => _handleDelete(context, index),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: minuteController,
-                decoration: InputDecoration(
-                  hintText: 'Enter minute point...',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.add),
-                    onPressed: () {
-                      if (minuteController.text.trim().isNotEmpty) {
-                        containerController.addMinute(meeting, minuteController.text.trim());
-                        minuteController.clear();
-                      }
-                    },
+            ),
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.5),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(16),
+                    bottomRight: Radius.circular(16),
                   ),
                 ),
-                onSubmitted: (value) {
-                  if (value.trim().isNotEmpty) {
-                    containerController.addMinute(meeting, value.trim());
-                    minuteController.clear();
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              GetBuilder<ContainerController>(
-                builder: (controller) {
-                  final minutes = meeting.minutes;
-                  return minutes.isEmpty
-                      ? Center(
-                          child: Text(
-                            'No minutes added yet',
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Meeting Minutes',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            color: Colors.purple[700],
+                          ),
+                        ),
+                        TextButton.icon(
+                          icon: Icon(
+                            Icons.add_circle_outline,
+                            size: 20,
+                            color: Colors.purple[700],
+                          ),
+                          label: Text(
+                            'Add',
                             style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 14,
+                              color: Colors.purple[700],
                             ),
                           ),
-                        )
-                      : SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.3,
-                          child: ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: minutes.length,
-                            itemBuilder: (context, index) {
-                              return ListTile(
-                                contentPadding: EdgeInsets.zero,
-                                leading: Icon(Icons.circle, size: 8, color: Colors.purple[400]),
-                                title: Text(minutes[index]),
-                                trailing: IconButton(
-                                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                                  onPressed: () => containerController.deleteMinute(meeting, index),
-                                ),
-                              );
-                            },
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.purple.withOpacity(0.1),
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
                           ),
-                        );
-                },
+                          onPressed: () => _showMinutesDialog(context, meeting),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    if (meeting.minutes.isEmpty)
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            children: [
+                              Icon(
+                                Icons.note_alt_outlined,
+                                size: 48,
+                                color: Colors.grey[400],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'No minutes added yet',
+                                style: TextStyle(
+                                  color: Colors.grey[600],
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else
+                      ListView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: meeting.minutes.length,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 6),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: Icon(
+                                    Icons.circle,
+                                    size: 6,
+                                    color: Colors.purple[300],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    meeting.minutes[index],
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      height: 1.5,
+                                      color: Colors.grey[800],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                  ],
+                ),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTimelineCard(ContainerData meeting, int index) {
+    return TweenAnimationBuilder<double>(
+      duration: Duration(milliseconds: 300),
+      tween: Tween(begin: 0.0, end: 1.0),
+      builder: (context, value, child) {
+        return Transform.translate(
+          offset: Offset(0, 50 * (1 - value)),
+          child: Opacity(
+            opacity: value,
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.purple[100]!,
+                    Colors.purple[50]!,
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    spreadRadius: 1,
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Theme(
+                data: Theme.of(context).copyWith(
+                  dividerColor: Colors.transparent,
+                  colorScheme: ColorScheme.light(
+                    primary: Colors.purple[700]!,
+                  ),
+                ),
+                child: ExpansionTile(
+                  tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        meeting.value1,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF2E3147),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.access_time,
+                            color: Colors.purple[300],
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${meeting.value2} - ${meeting.value3}',
+                            style: TextStyle(
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.purple.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          meeting.formattedDate,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.purple[700],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (meeting.minutes.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.purple[100],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${meeting.minutes.length}',
+                            style: TextStyle(
+                              color: Colors.purple[700],
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.edit_note,
+                          color: Colors.purple[400],
+                          size: 28,
+                        ),
+                        onPressed: () => _showMinutesDialog(context, meeting),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.delete_outline,
+                          color: Colors.red[400],
+                          size: 24,
+                        ),
+                        onPressed: () => _handleDelete(context, index),
+                      ),
+                    ],
+                  ),
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.5),
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(16),
+                          bottomRight: Radius.circular(16),
+                        ),
+                      ),
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Meeting Minutes',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Colors.purple[700],
+                                ),
+                              ),
+                              TextButton.icon(
+                                icon: Icon(
+                                  Icons.add_circle_outline,
+                                  size: 20,
+                                  color: Colors.purple[700],
+                                ),
+                                label: Text(
+                                  'Add',
+                                  style: TextStyle(
+                                    color: Colors.purple[700],
+                                  ),
+                                ),
+                                style: TextButton.styleFrom(
+                                  backgroundColor: Colors.purple.withOpacity(0.1),
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                ),
+                                onPressed: () => _showMinutesDialog(context, meeting),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          if (meeting.minutes.isEmpty)
+                            Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Column(
+                                  children: [
+                                    Icon(
+                                      Icons.note_alt_outlined,
+                                      size: 48,
+                                      color: Colors.grey[400],
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      'No minutes added yet',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontStyle: FontStyle.italic,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            )
+                          else
+                            ListView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: meeting.minutes.length,
+                              itemBuilder: (context, index) {
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(vertical: 6),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(top: 8),
+                                        child: Icon(
+                                          Icons.circle,
+                                          size: 6,
+                                          color: Colors.purple[300],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          meeting.minutes[index],
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            height: 1.5,
+                                            color: Colors.grey[800],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildMinutesList(ContainerData container) {
+    return GetX<ContainerController>(
+      builder: (controller) => ListView.builder(
+        shrinkWrap: true,
+        physics: NeverScrollableScrollPhysics(),
+        itemCount: container.minutes.length,
+        itemBuilder: (context, index) {
+          return ListTile(
+            title: Text(container.minutes[index]),
+          );
+        },
+      ),
+    );
+  }
+
+  void _showMinutesDialog(BuildContext context, ContainerData meeting) {
+    final textController = TextEditingController();
+    
+    Get.dialog(
+      AlertDialog(
+        title: Text('Add Minutes'),
+        content: TextField(
+          controller: textController,
+          decoration: InputDecoration(hintText: 'Enter minutes'),
+          maxLines: null,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              if (textController.text.isNotEmpty) {
+                await Get.find<ContainerController>().addMinute(meeting, textController.text);
+                Get.back();
+              }
+            },
+            child: Text('Add'),
+          ),
+        ],
+      ),
+      barrierDismissible: false,
     );
   }
 

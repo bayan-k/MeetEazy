@@ -66,4 +66,7 @@ class ContainerData extends HiveObject {
         return null;
     }
   }
+
+  // Helper method to ensure minutes is never null
+  List<String> get minutesList => minutes;
 }

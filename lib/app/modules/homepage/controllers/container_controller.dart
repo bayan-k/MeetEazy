@@ -6,9 +6,10 @@ import 'package:meetingreminder/models/container.dart';
 import 'package:meetingreminder/services/notification_service.dart';
 
 class ContainerController extends GetxController {
-  var containerList = <ContainerData>[].obs;
-  final String boxName = 'ContainerData';
-  late Box<ContainerData> _box;
+  RxList<ContainerData> containerList = RxList<ContainerData>();
+  RxList<ContainerData> todayMeetings = RxList<ContainerData>();
+  final String boxName = 'containerBox';
+  Box<ContainerData>? _box;
   late final NotificationService _notificationService;
   
   // Add selected date tracker
@@ -18,17 +19,20 @@ class ContainerController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    _initBox();
+    initializeBox();
     _notificationService = Get.find<NotificationService>();
   }
 
-  Future<void> _initBox() async {
+  Future<void> initializeBox() async {
     try {
-      _box = Hive.box<ContainerData>(boxName);
+      if (!Hive.isBoxOpen(boxName)) {
+        _box = await Hive.openBox<ContainerData>(boxName);
+      } else {
+        _box = Hive.box<ContainerData>(boxName);
+      }
       await loadContainerData();
     } catch (e) {
       print('Error initializing box: $e');
-      CustomSnackbar.showError('Error initializing data storage');
     }
   }
 
@@ -55,44 +59,67 @@ class ContainerController extends GetxController {
 
   void storeContainerData(ContainerData containerData) async {
     try {
-      final box = await Hive.openBox<ContainerData>('containerBox');
-      await box.add(containerData);
+      if (_box == null) {
+        await initializeBox();
+      }
+      await _box!.add(containerData);
       containerList.add(containerData);
       update();
+      CustomSnackbar.showSuccess('Meeting saved successfully');
     } catch (e) {
       print("Error storing container data: $e");
+      CustomSnackbar.showError('Error saving meeting');
     }
   }
 
   Future<void> loadContainerData() async {
     try {
-      final loadedData = _box.values.toList();
-      
-      // Remove past meetings that are more than a day old
-      final now = DateTime.now();
-      final yesterday = DateTime(now.year, now.month, now.day - 1);
-      
-      // Keep only future meetings and today's meetings
-      final filteredData = loadedData.where((meeting) => 
-        meeting.date.isAfter(yesterday)
-      ).toList();
-      
-      // Delete past meetings from storage
-      for (var i = 0; i < _box.length; i++) {
-        final meeting = _box.getAt(i);
-        if (meeting != null && meeting.date.isBefore(yesterday)) {
-          await _box.deleteAt(i);
-        }
+      if (_box == null) {
+        await initializeBox();
       }
       
-      // Sort meetings by date and time
-      filteredData.sort((a, b) => a.date.compareTo(b.date));
-      
-      containerList.assignAll(filteredData);
-      update();
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+
+      // Get valid meetings
+      var meetings = _box!.values.where((meeting) {
+        var meetingDate = DateTime(
+          meeting.date.year,
+          meeting.date.month,
+          meeting.date.day,
+        );
+        return !meetingDate.isBefore(today);
+      }).toList();
+
+      // Update container list
+      containerList.value = meetings;
+
+      // Update today meetings
+      todayMeetings.value = meetings.where((meeting) {
+        var meetingDate = DateTime(
+          meeting.date.year,
+          meeting.date.month,
+          meeting.date.day,
+        );
+        return meetingDate.isAtSameMomentAs(today);
+      }).toList();
+
+      // Clean up old meetings
+      for (var i = _box!.length - 1; i >= 0; i--) {
+        var meeting = _box!.getAt(i);
+        if (meeting != null) {
+          var meetingDate = DateTime(
+            meeting.date.year,
+            meeting.date.month,
+            meeting.date.day,
+          );
+          if (meetingDate.isBefore(today)) {
+            await _box!.deleteAt(i);
+          }
+        }
+      }
     } catch (e) {
       print('Error loading data: $e');
-      CustomSnackbar.showError('Failed to load meetings');
     }
   }
 
@@ -103,8 +130,8 @@ class ContainerController extends GetxController {
       
       // Find the box index for this meeting
       int? boxIndex;
-      for (var i = 0; i < _box.length; i++) {
-        final boxMeeting = _box.getAt(i);
+      for (var i = 0; i < _box!.length; i++) {
+        final boxMeeting = _box!.getAt(i);
         if (boxMeeting != null && 
             boxMeeting.date == meeting.date && 
             boxMeeting.value1 == meeting.value1 && 
@@ -115,7 +142,7 @@ class ContainerController extends GetxController {
       }
 
       if (boxIndex != null) {
-        await _box.deleteAt(boxIndex);
+        await _box!.deleteAt(boxIndex);
         await loadContainerData();
         update();
         CustomSnackbar.showSuccess('Meeting deleted successfully');
@@ -130,17 +157,24 @@ class ContainerController extends GetxController {
 
   List<ContainerData> getTodayMeetings() {
     final now = DateTime.now();
-    final startOfDay = DateTime(now.year, now.month, now.day);
-    final endOfDay = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    final today = DateTime(now.year, now.month, now.day);
     
     return containerList.where((meeting) {
-      return meeting.date.isAfter(startOfDay.subtract(const Duration(minutes: 1))) &&
-             meeting.date.isBefore(endOfDay.add(const Duration(minutes: 1)));
+      final meetingDate = DateTime(
+        meeting.date.year,
+        meeting.date.month,
+        meeting.date.day
+      );
+      return meetingDate.isAtSameMomentAs(today);
     }).toList();
   }
 
   void setSelectedDate(DateTime? date) {
     selectedDate.value = date;
+    if (date != null) {
+      // Only scroll if a date is selected
+      scrollToSelectedMeeting();
+    }
     update();
   }
 
@@ -177,27 +211,39 @@ class ContainerController extends GetxController {
            meeting.date.day == selectedDate.value!.day;
   }
 
-  Future<void> addMinute(ContainerData containerData, String minute) async {
+  Future<void> addMinute(ContainerData meeting, String minute) async {
     try {
-      containerData.minutes.add(minute);
-      await containerData.save();
-      update();
-      CustomSnackbar.showSuccess('Minute added successfully');
+      if (_box == null) {
+        await initializeBox();
+      }
+
+      if (meeting.minutes == null) {
+        meeting.minutes = [];
+      }
+      
+      meeting.minutes.add(minute);
+      await meeting.save();
+      
+      // Force refresh lists
+      await loadContainerData();
     } catch (e) {
-      print("Error adding minute: $e");
-      CustomSnackbar.showError('Error adding minute');
+      print('Error adding minute: $e');
     }
   }
 
-  Future<void> deleteMinute(ContainerData containerData, int index) async {
+  Future<void> deleteMinute(ContainerData meeting, int index) async {
     try {
-      containerData.minutes.removeAt(index);
-      await containerData.save();
-      update();
-      CustomSnackbar.showSuccess('Minute deleted successfully');
+      if (_box == null) {
+        await initializeBox();
+      }
+
+      meeting.minutes.removeAt(index);
+      await meeting.save();
+      
+      // Force refresh lists
+      await loadContainerData();
     } catch (e) {
-      print("Error deleting minute: $e");
-      CustomSnackbar.showError('Error deleting minute');
+      print('Error deleting minute: $e');
     }
   }
 
@@ -218,6 +264,7 @@ class ContainerController extends GetxController {
 
   @override
   void onClose() {
+    _box?.close();
     scrollController.dispose();
     super.onClose();
   }

@@ -11,8 +11,6 @@ Future<void> initHive() async {
   if (!Hive.isAdapterRegistered(0)) {
     Hive.registerAdapter(ContainerDataAdapter());
   }
-  await Hive.openBox<ContainerData>('ContainerData');
-  await Hive.openBox('settings');
 }
 
 void main() async {

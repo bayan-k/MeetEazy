@@ -25,13 +25,15 @@ class ContainerDataAdapter extends TypeAdapter<ContainerData> {
       value3: fields[5] as String,
       date: fields[6] as DateTime,
       formattedDate: fields[7] as String,
+      agenda: fields[8] as String,
+      minutes: (fields[9] as List?)?.cast<String>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, ContainerData obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.key1)
       ..writeByte(1)
@@ -47,7 +49,11 @@ class ContainerDataAdapter extends TypeAdapter<ContainerData> {
       ..writeByte(6)
       ..write(obj.date)
       ..writeByte(7)
-      ..write(obj.formattedDate);
+      ..write(obj.formattedDate)
+      ..writeByte(8)
+      ..write(obj.agenda)
+      ..writeByte(9)
+      ..write(obj.minutes);
   }
 
   @override
