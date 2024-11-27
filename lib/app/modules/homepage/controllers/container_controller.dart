@@ -224,10 +224,16 @@ class ContainerController extends GetxController {
       meeting.minutes.add(minute);
       await meeting.save();
       
-      // Force refresh lists
-      await loadContainerData();
+      // Update UI immediately
+      update();
+      
+      // Refresh data in background
+      loadContainerData();
+      
+      CustomSnackbar.showSuccess('Minute added successfully');
     } catch (e) {
       print('Error adding minute: $e');
+      CustomSnackbar.showError('Failed to add minute');
     }
   }
 
@@ -240,10 +246,16 @@ class ContainerController extends GetxController {
       meeting.minutes.removeAt(index);
       await meeting.save();
       
-      // Force refresh lists
-      await loadContainerData();
+      // Update UI immediately
+      update();
+      
+      // Refresh data in background
+      loadContainerData();
+      
+      CustomSnackbar.showSuccess('Minute deleted successfully');
     } catch (e) {
       print('Error deleting minute: $e');
+      CustomSnackbar.showError('Failed to delete minute');
     }
   }
 

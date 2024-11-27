@@ -486,52 +486,54 @@ class _TimelineViewState extends State<TimelineView> {
                                   ],
                                 ),
                                 trailing: Container(
-                                  width: 110,
+                                  width: 100,
                                   child: Row(
                                     mainAxisSize: MainAxisSize.min,
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
                                       if (meeting.minutes.isNotEmpty) ...[
                                         Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                                           decoration: BoxDecoration(
                                             color: isSelectedDateMeeting ? Colors.white.withOpacity(0.2) : Colors.purple[100],
-                                            borderRadius: BorderRadius.circular(12),
+                                            borderRadius: BorderRadius.circular(8),
                                           ),
                                           child: Text(
                                             '${meeting.minutes.length}',
                                             style: TextStyle(
                                               color: isSelectedDateMeeting ? Colors.white : Colors.purple[700],
                                               fontWeight: FontWeight.bold,
-                                              fontSize: 12,
+                                              fontSize: 11,
                                             ),
                                           ),
                                         ),
-                                        const SizedBox(width: 4),
+                                        const SizedBox(width: 2),
                                       ],
                                       SizedBox(
-                                        width: 28,
-                                        height: 28,
+                                        width: 24,
+                                        height: 24,
                                         child: IconButton(
                                           padding: EdgeInsets.zero,
+                                          visualDensity: VisualDensity.compact,
                                           icon: Icon(
                                             Icons.edit_note,
                                             color: isSelectedDateMeeting ? Colors.white : Colors.purple[400],
-                                            size: 24,
+                                            size: 20,
                                           ),
                                           onPressed: () => _showMinutesDialog(context, meeting),
                                         ),
                                       ),
-                                      const SizedBox(width: 4),
+                                      const SizedBox(width: 2),
                                       SizedBox(
-                                        width: 28,
-                                        height: 28,
+                                        width: 24,
+                                        height: 24,
                                         child: IconButton(
                                           padding: EdgeInsets.zero,
+                                          visualDensity: VisualDensity.compact,
                                           icon: Icon(
                                             Icons.delete_outline,
                                             color: isSelectedDateMeeting ? Colors.white70 : Colors.red[400],
-                                            size: 20,
+                                            size: 18,
                                           ),
                                           onPressed: () => _showDeleteDialog(context, index),
                                         ),
