@@ -2,7 +2,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:get/get.dart';
-import 'package:flutter/material.dart';
 
 class NotificationService extends GetxService {
   static NotificationService get to => Get.find();
@@ -120,8 +119,19 @@ class NotificationService extends GetxService {
 
       // Check if the notification time hasn't passed yet
       if (notificationTime.isAfter(now)) {
-        // Convert to TZDateTime
-        final scheduledDate = tz.TZDateTime.from(notificationTime, tz.local);
+        // Convert to TZDateTime ensuring proper timezone
+        final location = tz.local;
+        final scheduledDate = tz.TZDateTime(
+          location,
+          notificationTime.year,
+          notificationTime.month,
+          notificationTime.day,
+          notificationTime.hour,
+          notificationTime.minute,
+        );
+
+        print('Timezone: ${location.name}');
+        print('Scheduled TZ time: $scheduledDate');
 
         // Android notification details
         final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
@@ -135,6 +145,10 @@ class NotificationService extends GetxService {
           visibility: NotificationVisibility.public,
           autoCancel: false,
           ongoing: true,
+          usesChronometer: true,
+          chronometerCountDown: true,
+          showWhen: true,
+          when: meetingTime.millisecondsSinceEpoch,
           styleInformation: BigTextStyleInformation(
             'Your meeting "$description" starts in 10 minutes!\n\nTime: ${_formatTime(meetingTime)}',
             htmlFormatBigText: true,

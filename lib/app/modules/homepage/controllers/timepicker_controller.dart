@@ -4,14 +4,29 @@ import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:meetingreminder/app/modules/homepage/controllers/container_controller.dart';
 import 'package:meetingreminder/services/notification_service.dart';
 import 'package:meetingreminder/shared_widgets/custom_snackbar.dart';
-import 'package:meetingreminder/shared_widgets/simple_time_picker.dart';
+import 'package:meetingreminder/shared_widgets/text_time_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:meetingreminder/models/container.dart';
 import 'package:meetingreminder/shared_widgets/delete_dialog.dart';
 
 @pragma('vm:entry-point')
-void alarmCallback() {
-  print('Alarm fired!');
+void alarmCallback() async {
+  try {
+    // Initialize notifications if needed
+    final notificationService = NotificationService();
+    await notificationService.initialize();
+    
+    // Show the notification
+    await notificationService.showNotification(
+      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title: "Meeting Reminder",
+      body: "Your meeting starts in 10 minutes!",
+    );
+    
+    print('Alarm callback executed successfully');
+  } catch (e) {
+    print('Error in alarm callback: $e');
+  }
 }
 
 class TimePickerController extends GetxController {
@@ -56,7 +71,7 @@ class TimePickerController extends GetxController {
       
       await showDialog(
         context: context,
-        builder: (context) => SimpleTimePicker(
+        builder: (context) => TextTimePicker(
           initialTime: currentTime,
           onTimeSelected: (time) {
             if (isStartTime) {
@@ -124,6 +139,22 @@ class TimePickerController extends GetxController {
       );
 
       containerController.storeContainerData(containerData);
+
+      // Show immediate notification
+      _notificationService.showNotification(
+        id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+        title: "Meeting Scheduled",
+        body: "You will be notified 10 minutes before your meeting '${containerData.value1}' at ${startTime.value}",
+      );
+
+      // Schedule notification for 10 minutes before meeting
+      final meetingTime = _parseTimeToDateTime(startTime.value);
+      _notificationService.scheduleMeetingNotification(
+        id: (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 1, // Different ID for scheduled notification
+        title: containerData.value1,
+        description: agenda.isNotEmpty ? agenda : 'No agenda set',
+        meetingTime: meetingTime,
+      );
 
       _resetForm();
       CustomSnackbar.showSuccess("Meeting scheduled successfully");
