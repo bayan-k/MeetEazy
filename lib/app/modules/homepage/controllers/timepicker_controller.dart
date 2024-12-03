@@ -10,24 +10,24 @@ import 'package:meetingreminder/models/container.dart';
 import 'package:meetingreminder/shared_widgets/delete_dialog.dart';
 
 @pragma('vm:entry-point')
-void alarmCallback() async {
-  try {
-    // Initialize notifications if needed
-    final notificationService = NotificationService();
-    await notificationService.initialize();
+// void alarmCallback() async {
+//   try {
+//     // Initialize notifications if needed
+//     final notificationService = NotificationService();
+//     await notificationService.initialize();
     
-    // Show the notification
-    await notificationService.showNotification(
-      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      title: "Meeting Reminder",
-      body: "Your meeting starts in 10 minutes!",
-    );
+//     // Show the notification
+//     await notificationService.showNotification(
+//       id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+//       title: "Meeting Reminder",
+//       body: "Your meeting starts in 10 minutes!",
+//     );
     
-    print('Alarm callback executed successfully');
-  } catch (e) {
-    print('Error in alarm callback: $e');
-  }
-}
+//     print('Alarm callback executed successfully');
+//   } catch (e) {
+//     print('Error in alarm callback: $e');
+//   }
+// }
 
 class TimePickerController extends GetxController {
   final startTime = ''.obs;
@@ -118,12 +118,42 @@ class TimePickerController extends GetxController {
     }
   }
 
-  void storeMeetingData(String agenda, List<String> minutes) {
+  void storeMeetingData(String agenda, List<String> meetingMinutes) {
     try {
       if (startTime.value.isEmpty || endTime.value.isEmpty) {
         CustomSnackbar.showError("Please select both start and end times");
         return;
       }
+
+      // Parse the time string (e.g., "7:34 PM") into hours and minutes
+      final startTimeParts = startTime.value.split(' ');
+      final timeParts = startTimeParts[0].split(':');
+      var hours = int.parse(timeParts[0]);
+      final timeMinutes = int.parse(timeParts[1]);
+      
+      // Convert to 24-hour format if PM
+      if (startTimeParts[1] == 'PM' && hours != 12) {
+        hours += 12;
+      }
+      // Handle 12 AM special case
+      if (startTimeParts[1] == 'AM' && hours == 12) {
+        hours = 0;
+      }
+
+      // Create a new DateTime combining the selected date and time
+      final meetingDateTime = DateTime(
+        selectedDate.value.year,
+        selectedDate.value.month,
+        selectedDate.value.day,
+        hours,
+        timeMinutes,
+      );
+
+      print('📅 Time Analysis:');
+      print('1️⃣ Selected Time: ${startTime.value}');
+      print('2️⃣ Parsed Hours: $hours');
+      print('3️⃣ Parsed Minutes: $timeMinutes');
+      print('4️⃣ Final DateTime: $meetingDateTime');
 
       final containerData = ContainerData(
         key1: "Meeting Type",
@@ -132,29 +162,29 @@ class TimePickerController extends GetxController {
         value2: startTime.value,
         key3: "End Time",
         value3: endTime.value,
-        date: selectedDate.value,
+        date: meetingDateTime,
         formattedDate: formattedDate.value,
         agenda: agenda,
-        minutes: minutes,
+        minutes: meetingMinutes,
       );
 
       containerController.storeContainerData(containerData);
 
-      // Show immediate notification
-      _notificationService.showNotification(
-        id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        title: "Meeting Scheduled",
-        body: "You will be notified 10 minutes before your meeting '${containerData.value1}' at ${startTime.value}",
-      );
+      // // Show immediate notification
+      // _notificationService.showNotification(
+      //   id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      //   title: "Meeting Scheduled",
+      //   body: "You will be notified 10 minutes before your meeting '${containerData.value1}' at ${startTime.value}",
+      // );
 
-      // Schedule notification for 10 minutes before meeting
-      final meetingTime = _parseTimeToDateTime(startTime.value);
-      _notificationService.scheduleMeetingNotification(
-        id: (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 1, // Different ID for scheduled notification
-        title: containerData.value1,
-        description: agenda.isNotEmpty ? agenda : 'No agenda set',
-        meetingTime: meetingTime,
-      );
+      // // Schedule notification for 10 minutes before meeting
+      // final meetingTime = _parseTimeToDateTime(startTime.value);
+      // _notificationService.scheduleMeetingNotification(
+      //   id: (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 1, // Different ID for scheduled notification
+      //   title: containerData.value1,
+      //   description: agenda.isNotEmpty ? agenda : 'No agenda set',
+      //   meetingTime: meetingTime,
+      // );
 
       _resetForm();
       CustomSnackbar.showSuccess("Meeting scheduled successfully");

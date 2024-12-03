@@ -57,18 +57,39 @@ class ContainerController extends GetxController {
     return countMap;
   }
 
-  void storeContainerData(ContainerData containerData) async {
+  Future<void> storeContainerData(ContainerData containerData) async {
     try {
       if (_box == null) {
         await initializeBox();
       }
+
+      // Store the data
       await _box!.add(containerData);
-      containerList.add(containerData);
-      update();
-      CustomSnackbar.showSuccess('Meeting saved successfully');
+      await loadContainerData();
+
+      // Generate a unique notification ID
+      final notificationId = containerData.key.toString();
+
+      // Schedule 5-minute reminder
+      await _notificationService.scheduleNotification(
+        meetingId: notificationId,
+        title: 'Meeting Reminder',
+        body: '${containerData.value1} starts in 5 minutes\nAgenda: ${containerData.agenda}',
+        start_time: containerData.date.subtract(const Duration(minutes: 5)),
+      );
+
+      // Schedule notification for the meeting
+      await _notificationService.scheduleNotification(
+        meetingId: notificationId,
+        title: 'Meeting Starting',
+        body: '${containerData.value1} is starting now!\nAgenda: ${containerData.agenda}',
+        start_time: containerData.date,
+      );
+
+      CustomSnackbar.showSuccess('Meeting scheduled successfully');
     } catch (e) {
-      print("Error storing container data: $e");
-      CustomSnackbar.showError('Error saving meeting');
+      print('Error storing data: $e');
+      CustomSnackbar.showError('Failed to schedule meeting');
     }
   }
 
@@ -125,33 +146,22 @@ class ContainerController extends GetxController {
 
   Future<void> deleteContainerData(int index) async {
     try {
-      // Get the meeting at the index
-      final meeting = containerList[index];
-      
-      // Find the box index for this meeting
-      int? boxIndex;
-      for (var i = 0; i < _box!.length; i++) {
-        final boxMeeting = _box!.getAt(i);
-        if (boxMeeting != null && 
-            boxMeeting.date == meeting.date && 
-            boxMeeting.value1 == meeting.value1 && 
-            boxMeeting.value2 == meeting.value2) {
-          boxIndex = i;
-          break;
-        }
+      if (_box == null) {
+        await initializeBox();
       }
 
-      if (boxIndex != null) {
-        await _box!.deleteAt(boxIndex);
-        await loadContainerData();
-        update();
-        CustomSnackbar.showSuccess('Meeting deleted successfully');
-      } else {
-        throw Exception('Meeting not found in storage');
+      ContainerData? meeting = _box!.getAt(index);
+      if (meeting != null) {
+        // Cancel notifications using the meeting's key
+        await _notificationService.cancelNotification(meeting.key.toString());
       }
+
+      await _box!.deleteAt(index);
+      await loadContainerData();
+      CustomSnackbar.showSuccess('Meeting deleted successfully');
     } catch (e) {
       print('Error deleting data: $e');
-      CustomSnackbar.showError('Failed to delete meeting: ${e.toString()}');
+      CustomSnackbar.showError('Failed to delete meeting');
     }
   }
 

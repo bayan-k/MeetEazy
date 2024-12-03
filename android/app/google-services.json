@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "27802718704",
+    "project_id": "meeteazy-8a592",
+    "storage_bucket": "meeteazy-8a592.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:27802718704:android:6bebc1fff5a6936e760d35",
+        "android_client_info": {
+          "package_name": "com.bksolutions.meetingreminder"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAOP58Qk_kmRkG4PfuPKmwc-0DMkQC7ksE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -34,6 +34,9 @@ class ContainerData extends HiveObject {
   @HiveField(9)
   List<String> minutes;
 
+  @HiveField(10)
+  String notificationId;
+
   ContainerData({
     required this.key1,
     required this.value1,
@@ -45,7 +48,8 @@ class ContainerData extends HiveObject {
     required this.formattedDate,
     this.agenda = '',
     List<String>? minutes,
-  }) : minutes = minutes ?? [];
+  }) : minutes = minutes ?? [],
+       notificationId = DateTime.now().millisecondsSinceEpoch.toString();
 
   // Add operator overloading for map-like access
   dynamic operator [](String key) {
