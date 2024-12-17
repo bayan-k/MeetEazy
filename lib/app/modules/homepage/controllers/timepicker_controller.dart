@@ -14,15 +14,16 @@ void alarmCallback() async {
   try {
     // Initialize notifications if needed
     final notificationService = NotificationService();
+
     await notificationService.initialize();
-    
+
     // Show the notification
     await notificationService.showNotification(
       id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
       title: "Meeting Reminder",
       body: "Your meeting starts in 10 minutes!",
     );
-    
+
     print('Alarm callback executed successfully');
   } catch (e) {
     print('Error in alarm callback: $e');
@@ -38,6 +39,8 @@ class TimePickerController extends GetxController {
   final TextEditingController remarkController = TextEditingController();
   late final NotificationService _notificationService;
   late final ContainerController containerController;
+  final MeetScheduler scheduler = Get.find<MeetScheduler>();
+
   int meetingID = 0;
 
   @override
@@ -68,7 +71,7 @@ class TimePickerController extends GetxController {
   Future<void> meetingSetter(BuildContext context, bool isStartTime) async {
     try {
       final currentTime = isStartTime ? startTime.value : endTime.value;
-      
+
       await showDialog(
         context: context,
         builder: (context) => TextTimePicker(
@@ -123,42 +126,52 @@ class TimePickerController extends GetxController {
       if (startTime.value.isEmpty || endTime.value.isEmpty) {
         CustomSnackbar.showError("Please select both start and end times");
         return;
+      } else if (scheduler.isTimeSlotAvailable(
+          _parseTimeToDateTime(startTime.value),
+          _parseTimeToDateTime(endTime.value))) {
+        final containerData = ContainerData(
+          key1: "Meeting Type",
+          value1: remarkController.text.isEmpty
+              ? "General Meeting"
+              : remarkController.text,
+          key2: "Start Time",
+          value2: startTime.value,
+          key3: "End Time",
+          value3: endTime.value,
+          date: selectedDate.value,
+          formattedDate: formattedDate.value,
+          agenda: agenda,
+          minutes: minutes,
+        );
+
+        containerController.storeContainerData(containerData);
+
+        // Show immediate notification
+        _notificationService.showNotification(
+          id: UniqueKey().hashCode,
+          //id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+          title: "Meeting Scheduled",
+          body:
+              "You will be notified 10 minutes before your meeting '${containerData.value1}' at ${startTime.value}",
+        );
+
+        // Schedule notification EXACT TIME meeting
+        final meetingStartTime = _parseTimeToDateTime(startTime.value);
+        final meetingEndTime = _parseTimeToDateTime(endTime.value);
+
+        _notificationService.scheduleMeetingNotification(
+            id: UniqueKey().hashCode,
+            // id: (DateTime.now().millisecondsSinceEpoch ~/ 1000) +
+            //     1, // Different ID for scheduled notification
+            title: containerData.value1,
+            description: agenda.isNotEmpty ? agenda : 'No agenda set',
+            meetingStartTime: meetingStartTime,
+            meetingEndTime: meetingEndTime);
+
+        _resetForm();
+        CustomSnackbar.showSuccess("Meeting scheduled successfully");
+        Get.back();
       }
-
-      final containerData = ContainerData(
-        key1: "Meeting Type",
-        value1: remarkController.text.isEmpty ? "General Meeting" : remarkController.text,
-        key2: "Start Time",
-        value2: startTime.value,
-        key3: "End Time",
-        value3: endTime.value,
-        date: selectedDate.value,
-        formattedDate: formattedDate.value,
-        agenda: agenda,
-        minutes: minutes,
-      );
-
-      containerController.storeContainerData(containerData);
-
-      // Show immediate notification
-      _notificationService.showNotification(
-        id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-        title: "Meeting Scheduled",
-        body: "You will be notified 10 minutes before your meeting '${containerData.value1}' at ${startTime.value}",
-      );
-
-      // Schedule notification for 10 minutes before meeting
-      final meetingTime = _parseTimeToDateTime(startTime.value);
-      _notificationService.scheduleMeetingNotification(
-        id: (DateTime.now().millisecondsSinceEpoch ~/ 1000) + 1, // Different ID for scheduled notification
-        title: containerData.value1,
-        description: agenda.isNotEmpty ? agenda : 'No agenda set',
-        meetingTime: meetingTime,
-      );
-
-      _resetForm();
-      CustomSnackbar.showSuccess("Meeting scheduled successfully");
-      Get.back();
     } catch (e) {
       CustomSnackbar.showError("Error storing meeting: $e");
     }
@@ -227,5 +240,23 @@ class TimePickerController extends GetxController {
   void onClose() {
     remarkController.dispose();
     super.onClose();
+  }
+}
+
+class MeetScheduler extends GetxController {
+  final List<Map<String, DateTime>> meetings = [];
+
+  // Function to check for overlapping meetings
+  bool isTimeSlotAvailable(DateTime newStart, DateTime newEnd) {
+    for (var meeting in meetings) {
+      DateTime existingStart = meeting['start']!;
+      DateTime existingEnd = meeting['end']!;
+
+      // Check for overlap condition
+      if (newStart.isBefore(existingEnd) && newEnd.isAfter(existingStart)) {
+        return false; // Overlap found
+      }
+    }
+    return true; // No overlap
   }
 }

@@ -1,12 +1,16 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:meetingreminder/app/modules/homepage/controllers/timepicker_controller.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:get/get.dart';
 
 class NotificationService extends GetxService {
-  static NotificationService get to => Get.find();
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
+
+  final MeetScheduler scheduler = Get.find<MeetScheduler>();
+
+  // A list to store existing meeting times as pairs of DateTime
 
   @override
   void onInit() {
@@ -18,10 +22,18 @@ class NotificationService extends GetxService {
     try {
       // Initialize timezone
       tz.initializeTimeZones();
-      
+
+      // fetch local timezone
+      // final String localTimeZone =
+      //     await FlutterNativeTimezone.getLocalTimezone();
+
+      final kolkata = tz.getLocation('Asia/Kolkata');
+      print('Local Timezone: $kolkata'); // Debugging
       // Set local timezone
-      final String timeZoneName = tz.local.name;
-      tz.setLocalLocation(tz.getLocation(timeZoneName));
+      tz.setLocalLocation(kolkata);
+
+      // Request permission to schedule exact alarms (Android 12+)
+      await requestExactAlarmsPermission();
 
       // Create notification channel for Android
       const AndroidNotificationChannel channel = AndroidNotificationChannel(
@@ -65,7 +77,8 @@ class NotificationService extends GetxService {
       );
 
       // Combine platform-specific settings
-      final InitializationSettings initializationSettings = InitializationSettings(
+      final InitializationSettings initializationSettings =
+          InitializationSettings(
         android: initializationSettingsAndroid,
         iOS: initializationSettingsIOS,
       );
@@ -86,11 +99,25 @@ class NotificationService extends GetxService {
             sound: true,
             critical: true,
           );
-          
+
       print('Notification service initialized successfully');
     } catch (e, stackTrace) {
       print('Error initializing notifications: $e');
       print('Stack trace: $stackTrace');
+    }
+  }
+
+  // Request Exact Alarms Permission for Android 12+
+  Future<void> requestExactAlarmsPermission() async {
+    final androidPlugin =
+        flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
+
+    if (androidPlugin != null) {
+      // Directly request exact alarm permission for Android 12+
+      print('Requesting exact alarms permission...');
+      await androidPlugin.requestExactAlarmsPermission();
+      print('Exact alarms permission requested');
     }
   }
 
@@ -101,86 +128,102 @@ class NotificationService extends GetxService {
     }
   }
 
-  Future<void> scheduleMeetingNotification({
-    required int id,
-    required String title,
-    required String description,
-    required DateTime meetingTime,
-  }) async {
+  Future<void> scheduleMeetingNotification(
+      {required int id,
+      required String title,
+      required String description,
+      required DateTime meetingStartTime,
+      required DateTime meetingEndTime}) async {
+    // await requestExactAlarmsPermission();
+
     try {
-      // Calculate notification time (10 minutes before meeting)
-      final notificationTime = meetingTime.subtract(const Duration(minutes: 10));
-      final now = DateTime.now();
+      if (scheduler.isTimeSlotAvailable(meetingStartTime, meetingEndTime)) {
+        scheduler.meetings
+            .add({'start': meetingStartTime, 'end': meetingEndTime});
+        print(
+            'Meeting scheduled from ${meetingStartTime} to ${meetingEndTime}');
 
-      // Debug prints
-      print('Current time: $now');
-      print('Meeting time: $meetingTime');
-      print('Scheduled notification time: $notificationTime');
+        final notificationTime = meetingStartTime;
+        final now = DateTime.now();
 
-      // Check if the notification time hasn't passed yet
-      if (notificationTime.isAfter(now)) {
-        // Convert to TZDateTime ensuring proper timezone
-        final location = tz.local;
-        final scheduledDate = tz.TZDateTime(
-          location,
-          notificationTime.year,
-          notificationTime.month,
-          notificationTime.day,
-          notificationTime.hour,
-          notificationTime.minute,
-        );
+        // Debug prints
+        print('Current time: $now');
+        print('Meeting time: $meetingStartTime');
+        print('Scheduled notification time: $notificationTime');
 
-        print('Timezone: ${location.name}');
-        print('Scheduled TZ time: $scheduledDate');
+        // Check if the notification time hasn't passed yet
+        if (notificationTime.isAfter(now)) {
+          // Convert to TZDateTime ensuring proper timezone
 
-        // Android notification details
-        final AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-          'meeting_reminder',
-          'Meeting Reminders',
-          channelDescription: 'Notifications for upcoming meetings',
-          importance: Importance.max,
-          priority: Priority.max,
-          fullScreenIntent: true,
-          category: AndroidNotificationCategory.alarm,
-          visibility: NotificationVisibility.public,
-          autoCancel: false,
-          ongoing: true,
-          usesChronometer: true,
-          chronometerCountDown: true,
-          showWhen: true,
-          when: meetingTime.millisecondsSinceEpoch,
-          styleInformation: BigTextStyleInformation(
-            'Your meeting "$description" starts in 10 minutes!\n\nTime: ${_formatTime(meetingTime)}',
-            htmlFormatBigText: true,
-            contentTitle: 'Upcoming Meeting: $title',
-            htmlFormatContentTitle: true,
-          ),
-        );
+          final location = tz.getLocation('Asia/Kolkata');
+          final scheduledDate = tz.TZDateTime(
+            location,
+            meetingStartTime.year,
+            meetingStartTime.month,
+            meetingStartTime.day,
+            meetingStartTime.hour,
+            meetingStartTime.minute,
+          );
+          print(location);
 
-        // iOS notification details
-        const DarwinNotificationDetails iosDetails = DarwinNotificationDetails(
-          presentAlert: true,
-          presentBadge: true,
-          presentSound: true,
-          interruptionLevel: InterruptionLevel.timeSensitive,
-        );
+          print('Timezone: ${location.name}');
+          print('Scheduled TZ time: $scheduledDate');
 
-        // Schedule the notification
-        await flutterLocalNotificationsPlugin.zonedSchedule(
-          id,
-          'Upcoming Meeting: $title',
-          'Your meeting "$description" starts in 10 minutes!\n\nTime: ${_formatTime(meetingTime)}',
-          scheduledDate,
-          NotificationDetails(android: androidDetails, iOS: iosDetails),
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-        );
+          // Android notification details
+          final AndroidNotificationDetails androidDetails =
+              AndroidNotificationDetails(
+            'meeting_reminder',
+            'Meeting Reminders',
+            channelDescription: 'Notifications for upcoming meetings',
+            importance: Importance.max,
+            priority: Priority.max,
+            fullScreenIntent: true,
+            category: AndroidNotificationCategory.alarm,
+            visibility: NotificationVisibility.public,
+            autoCancel: false,
+            ongoing: true,
+            usesChronometer: true,
+            chronometerCountDown: true,
+            showWhen: true,
+            when: meetingStartTime.millisecondsSinceEpoch,
+            styleInformation: BigTextStyleInformation(
+              'Your meeting "$description" starts in 10 minutes!\n\nTime: ${_formatTime(meetingStartTime)}',
+              htmlFormatBigText: true,
+              contentTitle: 'Upcoming Meeting: $title',
+              htmlFormatContentTitle: true,
+            ),
+          );
 
-        print('Successfully scheduled notification for $scheduledDate');
+          // iOS notification details
+          const DarwinNotificationDetails iosDetails =
+              DarwinNotificationDetails(
+            presentAlert: true,
+            presentBadge: true,
+            presentSound: true,
+            interruptionLevel: InterruptionLevel.timeSensitive,
+          );
+
+          // Schedule the notification
+          await flutterLocalNotificationsPlugin.zonedSchedule(
+            id,
+            'Upcoming Meeting: $title',
+            'Your meeting "$description" starts in 10 minutes!\n\nTime: ${_formatTime(meetingStartTime)}',
+            scheduledDate,
+            NotificationDetails(android: androidDetails, iOS: iosDetails),
+            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
+          );
+
+          print('Successfully scheduled notification for $scheduledDate');
+        } else {
+          print('Cannot schedule notification: Time has already passed');
+          print('Attempted schedule time was: $notificationTime');
+        }
       } else {
-        print('Cannot schedule notification: Time has already passed');
-        print('Attempted schedule time was: $notificationTime');
+        print('Error: Time slot overlaps with an existing meeting!');
       }
+      // Calculate notification time (10 minutes before meeting)
     } catch (e, stackTrace) {
       print('Error scheduling notification: $e');
       print('Stack trace: $stackTrace');
