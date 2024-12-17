@@ -1,5 +1,5 @@
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:meetingreminder/app/modules/homepage/controllers/timepicker_controller.dart';
+import 'package:meetingreminder/controllers/meet_scheduler.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:get/get.dart';

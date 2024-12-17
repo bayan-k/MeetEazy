@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:meetingreminder/app/modules/homepage/controllers/bottom_nav_controller.dart';
-import 'package:meetingreminder/app/modules/homepage/controllers/container_controller.dart';
-import 'package:meetingreminder/app/modules/homepage/controllers/timepicker_controller.dart';
+import 'package:meetingreminder/controllers/bottom_nav_controller.dart';
+import 'package:meetingreminder/controllers/container_controller.dart';
+import 'package:meetingreminder/controllers/timepicker_controller.dart';
 import 'package:meetingreminder/models/container.dart';
 import 'package:meetingreminder/shared_widgets/meeting_setter_box.dart';
 import 'package:meetingreminder/shared_widgets/confirm_dialog.dart';

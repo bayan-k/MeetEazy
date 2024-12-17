@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
-import 'package:meetingreminder/app/modules/homepage/controllers/container_controller.dart';
+import 'package:meetingreminder/controllers/container_controller.dart';
+import 'package:meetingreminder/controllers/meet_scheduler.dart';
 import 'package:meetingreminder/services/notification_service.dart';
 import 'package:meetingreminder/shared_widgets/custom_snackbar.dart';
 import 'package:meetingreminder/shared_widgets/text_time_picker.dart';
@@ -240,23 +241,5 @@ class TimePickerController extends GetxController {
   void onClose() {
     remarkController.dispose();
     super.onClose();
-  }
-}
-
-class MeetScheduler extends GetxController {
-  final List<Map<String, DateTime>> meetings = [];
-
-  // Function to check for overlapping meetings
-  bool isTimeSlotAvailable(DateTime newStart, DateTime newEnd) {
-    for (var meeting in meetings) {
-      DateTime existingStart = meeting['start']!;
-      DateTime existingEnd = meeting['end']!;
-
-      // Check for overlap condition
-      if (newStart.isBefore(existingEnd) && newEnd.isAfter(existingStart)) {
-        return false; // Overlap found
-      }
-    }
-    return true; // No overlap
   }
 }

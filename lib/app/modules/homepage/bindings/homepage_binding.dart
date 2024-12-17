@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
-import 'package:meetingreminder/app/modules/homepage/controllers/bottom_nav_controller.dart';
-import 'package:meetingreminder/app/modules/homepage/controllers/container_controller.dart';
-import 'package:meetingreminder/app/modules/homepage/controllers/timepicker_controller.dart';
+import 'package:meetingreminder/controllers/bottom_nav_controller.dart';
+import 'package:meetingreminder/controllers/container_controller.dart';
+import 'package:meetingreminder/controllers/timepicker_controller.dart';
 
 import 'package:meetingreminder/services/notification_service.dart';
 

@@ -1,9 +1,10 @@
 import 'package:get/get.dart';
-import 'package:get/get_connect/http/src/utils/utils.dart';
-import 'package:meetingreminder/app/modules/homepage/controllers/bottom_nav_controller.dart';
-import 'package:meetingreminder/app/modules/homepage/controllers/container_controller.dart';
-import 'package:meetingreminder/app/modules/homepage/controllers/meeting_counter.dart';
-import 'package:meetingreminder/app/modules/homepage/controllers/timepicker_controller.dart';
+import 'package:meetingreminder/controllers/bottom_nav_controller.dart';
+import 'package:meetingreminder/controllers/container_controller.dart';
+import 'package:meetingreminder/controllers/meet_scheduler.dart';
+import 'package:meetingreminder/controllers/meeting_counter_controller.dart';
+import 'package:meetingreminder/controllers/timepicker_controller.dart';
+
 import 'package:meetingreminder/services/notification_service.dart';
 
 class InitialBinding extends Bindings {

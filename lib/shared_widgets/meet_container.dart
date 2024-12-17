@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:meetingreminder/app/modules/homepage/controllers/container_controller.dart';
+import 'package:meetingreminder/controllers/container_controller.dart';
 import 'package:meetingreminder/models/container.dart';
 import 'package:meetingreminder/shared_widgets/delete_dialog.dart';
 import 'package:meetingreminder/app/modules/meeting_details/views/meeting_details_page.dart';
 
 Widget buildContainer(BuildContext context) {
-  final ContainerController containerController = Get.find<ContainerController>();
+  final ContainerController containerController =
+      Get.find<ContainerController>();
 
   Future<void> handleDelete(ContainerData meeting) async {
     final bool? confirm = await showDeleteDialog(context);
@@ -62,7 +63,8 @@ Widget buildContainer(BuildContext context) {
                     icon: const Icon(Icons.add),
                     onPressed: () {
                       if (minuteController.text.trim().isNotEmpty) {
-                        containerController.addMinute(containerData, minuteController.text.trim());
+                        containerController.addMinute(
+                            containerData, minuteController.text.trim());
                         minuteController.clear();
                       }
                     },
@@ -94,11 +96,14 @@ Widget buildContainer(BuildContext context) {
                         itemBuilder: (context, index) {
                           return ListTile(
                             contentPadding: EdgeInsets.zero,
-                            leading: Icon(Icons.circle, size: 8, color: Colors.purple[400]),
+                            leading: Icon(Icons.circle,
+                                size: 8, color: Colors.purple[400]),
                             title: Text(minutes[index]),
                             trailing: IconButton(
-                              icon: const Icon(Icons.delete_outline, color: Colors.red),
-                              onPressed: () => containerController.deleteMinute(containerData, index),
+                              icon: const Icon(Icons.delete_outline,
+                                  color: Colors.red),
+                              onPressed: () => containerController.deleteMinute(
+                                  containerData, index),
                             ),
                           );
                         },
@@ -120,7 +125,7 @@ Widget buildContainer(BuildContext context) {
       child: Obx(() {
         // Get only today's meetings
         final todayMeetings = containerController.getTodayMeetings();
-        
+
         if (todayMeetings.isEmpty) {
           return Center(
             child: Column(
@@ -201,7 +206,7 @@ Widget buildContainer(BuildContext context) {
                       ],
                     ),
                     const SizedBox(height: 8),
-                    
+
                     // Time Details
                     Row(
                       children: [

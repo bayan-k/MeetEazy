@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:meetingreminder/controllers/container_controller.dart';
 import 'package:meetingreminder/models/container.dart';
-import 'package:meetingreminder/app/modules/homepage/controllers/container_controller.dart';
+
 import 'package:meetingreminder/shared_widgets/custom_snackbar.dart';
 
 class MeetingDetailsPage extends StatefulWidget {

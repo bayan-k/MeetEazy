@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:meetingreminder/app/modules/homepage/controllers/timepicker_controller.dart';
+import 'package:meetingreminder/controllers/timepicker_controller.dart';
+
 
 class MeetingSetterBox extends StatefulWidget {
   const MeetingSetterBox({Key? key}) : super(key: key);
