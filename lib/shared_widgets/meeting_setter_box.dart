@@ -14,6 +14,7 @@ class _MeetingSetterBoxState extends State<MeetingSetterBox> {
   final timePickerController = Get.find<TimePickerController>();
   final TextEditingController agendaController = TextEditingController();
   final RxList<String> minutes = <String>[].obs;
+  
 
   void _showMinutesDialog() {
     final TextEditingController minuteController = TextEditingController();

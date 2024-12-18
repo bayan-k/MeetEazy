@@ -11,7 +11,7 @@ class ContainerController extends GetxController {
   final String boxName = 'containerBox';
   Box<ContainerData>? _box;
   late final NotificationService _notificationService;
-  
+
   // Add selected date tracker
   Rx<DateTime?> selectedDate = Rx<DateTime?>(null);
   final ScrollController scrollController = ScrollController();
@@ -39,8 +39,8 @@ class ContainerController extends GetxController {
   int getMeetingCountForDate(DateTime date) {
     return containerList.where((meeting) {
       return meeting.date.year == date.year &&
-             meeting.date.month == date.month &&
-             meeting.date.day == date.day;
+          meeting.date.month == date.month &&
+          meeting.date.day == date.day;
     }).length;
   }
 
@@ -66,6 +66,7 @@ class ContainerController extends GetxController {
       containerList.add(containerData);
       update();
       CustomSnackbar.showSuccess('Meeting saved successfully');
+      print(containerData);
     } catch (e) {
       print("Error storing container data: $e");
       CustomSnackbar.showError('Error saving meeting');
@@ -77,7 +78,7 @@ class ContainerController extends GetxController {
       if (_box == null) {
         await initializeBox();
       }
-      
+
       final now = DateTime.now();
       final today = DateTime(now.year, now.month, now.day);
 
@@ -88,6 +89,7 @@ class ContainerController extends GetxController {
           meeting.date.month,
           meeting.date.day,
         );
+        print(!meetingDate.isBefore(today));
         return !meetingDate.isBefore(today);
       }).toList();
 
@@ -127,14 +129,14 @@ class ContainerController extends GetxController {
     try {
       // Get the meeting at the index
       final meeting = containerList[index];
-      
+
       // Find the box index for this meeting
       int? boxIndex;
       for (var i = 0; i < _box!.length; i++) {
         final boxMeeting = _box!.getAt(i);
-        if (boxMeeting != null && 
-            boxMeeting.date == meeting.date && 
-            boxMeeting.value1 == meeting.value1 && 
+        if (boxMeeting != null &&
+            boxMeeting.date == meeting.date &&
+            boxMeeting.value1 == meeting.value1 &&
             boxMeeting.value2 == meeting.value2) {
           boxIndex = i;
           break;
@@ -158,13 +160,10 @@ class ContainerController extends GetxController {
   List<ContainerData> getTodayMeetings() {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    
+
     return containerList.where((meeting) {
-      final meetingDate = DateTime(
-        meeting.date.year,
-        meeting.date.month,
-        meeting.date.day
-      );
+      final meetingDate =
+          DateTime(meeting.date.year, meeting.date.month, meeting.date.day);
       return meetingDate.isAtSameMomentAs(today);
     }).toList();
   }
@@ -181,10 +180,9 @@ class ContainerController extends GetxController {
   void scrollToSelectedMeeting() {
     if (containerList.isEmpty || selectedDate.value == null) return;
 
-    final index = containerList.indexWhere(
-      (meeting) => isMeetingFromSelectedDate(meeting)
-    );
-    
+    final index = containerList
+        .indexWhere((meeting) => isMeetingFromSelectedDate(meeting));
+
     if (index != -1) {
       final position = index * 172.0;
       scrollController.animateTo(
@@ -199,16 +197,63 @@ class ContainerController extends GetxController {
     if (selectedDate.value == null) return [];
     return containerList.where((meeting) {
       return meeting.date.year == selectedDate.value!.year &&
-             meeting.date.month == selectedDate.value!.month &&
-             meeting.date.day == selectedDate.value!.day;
+          meeting.date.month == selectedDate.value!.month &&
+          meeting.date.day == selectedDate.value!.day;
     }).toList();
   }
 
   bool isMeetingFromSelectedDate(ContainerData meeting) {
     if (selectedDate.value == null) return false;
     return meeting.date.year == selectedDate.value!.year &&
-           meeting.date.month == selectedDate.value!.month &&
-           meeting.date.day == selectedDate.value!.day;
+        meeting.date.month == selectedDate.value!.month &&
+        meeting.date.day == selectedDate.value!.day;
+  }
+
+  Future<bool> isSlotAvailable(
+      DateTime newStart, DateTime newEnd, DateTime selectedDate) async {
+    // Ensure valid time range
+    if (newStart.isAfter(newEnd) || newStart.isAtSameMomentAs(newEnd)) {
+      // CustomSnackbar.showError('Invalid time range');
+      return false;
+    }
+    await loadContainerData();
+    // Ensure containerList is up-to-date if it depends on async operations
+
+    if (_box == null) {
+      print('Box is not initialized');
+      return false;
+    }
+    // Check against existing meetings
+    for (var meeting in containerList) {
+      final existingDate = DateTime(
+        meeting.date.year,
+        meeting.date.month,
+        meeting.date.day,
+      );
+
+      if (existingDate.isAtSameMomentAs(selectedDate)) {
+        final existingStart = _parseTimeToDateTime(meeting.value2);
+        final existingEnd = _parseTimeToDateTime(meeting.value3);
+        printStartAndEndTimes();
+
+        // meeting.value2;
+        print('Checking overlap:');
+        print('New: $newStart - $newEnd');
+        print('Existing: $existingStart - $existingEnd');
+
+        // Check for overlap
+        if (newStart.isBefore(existingEnd) && newEnd.isAfter(existingStart) ||
+            newStart.isAtSameMomentAs(existingStart) ||
+            newEnd.isAtSameMomentAs(existingEnd)) {
+          // CustomSnackbar.showError(
+          //     'Time slot overlaps with an existing meeting');
+          return false;
+        }
+      }
+    }
+
+    // Slot is available
+    return true;
   }
 
   Future<void> addMinute(ContainerData meeting, String minute) async {
@@ -220,20 +265,51 @@ class ContainerController extends GetxController {
       if (meeting.minutes == null) {
         meeting.minutes = [];
       }
-      
+
       meeting.minutes.add(minute);
       await meeting.save();
-      
+
       // Update UI immediately
       update();
-      
+
       // Refresh data in background
       loadContainerData();
-      
+
       CustomSnackbar.showSuccess('Minute added successfully');
     } catch (e) {
       print('Error adding minute: $e');
       CustomSnackbar.showError('Failed to add minute');
+    }
+  }
+
+  DateTime _parseTimeToDateTime(String timeStr) {
+    try {
+      if (selectedDate.value == null) {
+        throw Exception('selected date is null');
+      }
+
+      final timeParts = timeStr.split(' ');
+      final hourMin = timeParts[0].split(':');
+      int hour = int.parse(hourMin[0]);
+      final int minute = int.parse(hourMin[1]);
+      final String period = timeParts[1].toUpperCase();
+
+      // Convert to 24-hour format
+      if (period == 'PM' && hour != 12) {
+        hour += 12;
+      } else if (period == 'AM' && hour == 12) {
+        hour = 0;
+      }
+
+      return DateTime(
+        selectedDate.value!.year,
+        selectedDate.value!.month,
+        selectedDate.value!.day,
+        hour,
+        minute,
+      );
+    } catch (e) {
+      throw Exception('Invalid time format: $e');
     }
   }
 
@@ -245,13 +321,13 @@ class ContainerController extends GetxController {
 
       meeting.minutes.removeAt(index);
       await meeting.save();
-      
+
       // Update UI immediately
       update();
-      
+
       // Refresh data in background
       loadContainerData();
-      
+
       CustomSnackbar.showSuccess('Minute deleted successfully');
     } catch (e) {
       print('Error deleting minute: $e');
@@ -272,6 +348,24 @@ class ContainerController extends GetxController {
       print('Error updating agenda: $e');
       CustomSnackbar.showError('Failed to update agenda');
     }
+  }
+
+  void printStartAndEndTimes() {
+    // Check if the container list is empty
+    if (containerList.isEmpty) {
+      print("No meetings available.");
+      return;
+    }
+
+    // Iterate over the containerList and print start and end times
+    final startEndTimes = containerList.map((meeting) {
+      return {
+        "startTime": meeting.value2,
+        "endTime": meeting.value3,
+      };
+    }).toList();
+
+    print("Start and End Times: $startEndTimes");
   }
 
   @override

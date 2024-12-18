@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:meetingreminder/controllers/container_controller.dart';
-import 'package:meetingreminder/controllers/meet_scheduler.dart';
+
 import 'package:meetingreminder/services/notification_service.dart';
 import 'package:meetingreminder/shared_widgets/custom_snackbar.dart';
 import 'package:meetingreminder/shared_widgets/text_time_picker.dart';
@@ -10,26 +10,26 @@ import 'package:intl/intl.dart';
 import 'package:meetingreminder/models/container.dart';
 import 'package:meetingreminder/shared_widgets/delete_dialog.dart';
 
-@pragma('vm:entry-point')
-void alarmCallback() async {
-  try {
-    // Initialize notifications if needed
-    final notificationService = NotificationService();
+// @pragma('vm:entry-point')
+// void alarmCallback() async {
+//   try {
+//     // Initialize notifications if needed
+//     final notificationService = NotificationService();
 
-    await notificationService.initialize();
+//     await notificationService.initialize();
 
-    // Show the notification
-    await notificationService.showNotification(
-      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      title: "Meeting Reminder",
-      body: "Your meeting starts in 10 minutes!",
-    );
+//     // Show the notification
+//     await notificationService.showNotification(
+//       id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+//       title: "Meeting Reminder",
+//       body: "Your meeting starts in 10 minutes!",
+//     );
 
-    print('Alarm callback executed successfully');
-  } catch (e) {
-    print('Error in alarm callback: $e');
-  }
-}
+//     print('Alarm callback executed successfully');
+//   } catch (e) {
+//     print('Error in alarm callback: $e');
+//   }
+// }
 
 class TimePickerController extends GetxController {
   final startTime = ''.obs;
@@ -40,7 +40,7 @@ class TimePickerController extends GetxController {
   final TextEditingController remarkController = TextEditingController();
   late final NotificationService _notificationService;
   late final ContainerController containerController;
-  final MeetScheduler scheduler = Get.find<MeetScheduler>();
+  // final MeetScheduler scheduler = Get.find<MeetScheduler>();
 
   int meetingID = 0;
 
@@ -114,6 +114,7 @@ class TimePickerController extends GetxController {
 
       if (picked != null) {
         selectedDate.value = picked;
+
         formattedDate.value = DateFormat('MMM d, y').format(picked);
         update();
       }
@@ -122,14 +123,19 @@ class TimePickerController extends GetxController {
     }
   }
 
-  void storeMeetingData(String agenda, List<String> minutes) {
+  Future<void> storeMeetingData(String agenda, List<String> minutes) async {
+    // _parseTimeToDateTime(formattedDate.value));
+    print(startTime.value);
+    print(endTime.value);
+    Future<bool> isAvailable = containerController.isSlotAvailable(
+        _parseTimeToDateTime(startTime.value),
+        _parseTimeToDateTime(endTime.value),
+        selectedDate.value);
     try {
       if (startTime.value.isEmpty || endTime.value.isEmpty) {
         CustomSnackbar.showError("Please select both start and end times");
         return;
-      } else if (scheduler.isTimeSlotAvailable(
-          _parseTimeToDateTime(startTime.value),
-          _parseTimeToDateTime(endTime.value))) {
+      } else if (await isAvailable) {
         final containerData = ContainerData(
           key1: "Meeting Type",
           value1: remarkController.text.isEmpty
@@ -146,19 +152,24 @@ class TimePickerController extends GetxController {
         );
 
         containerController.storeContainerData(containerData);
+        final meetingStartTime = _parseTimeToDateTime(startTime.value);
+        final meetingEndTime = _parseTimeToDateTime(endTime.value);
 
         // Show immediate notification
         _notificationService.showNotification(
-          id: UniqueKey().hashCode,
-          //id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
-          title: "Meeting Scheduled",
-          body:
-              "You will be notified 10 minutes before your meeting '${containerData.value1}' at ${startTime.value}",
-        );
+            id: UniqueKey().hashCode,
+            //id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+            title: "Meeting Scheduled",
+            body:
+                "You will be notified 10 minutes before your meeting '${containerData.value1}' at ${startTime.value}",
+            meetingStartTime: meetingStartTime,
+            meetingEndTime: meetingEndTime,
+            selectedDate: selectedDate);
 
         // Schedule notification EXACT TIME meeting
-        final meetingStartTime = _parseTimeToDateTime(startTime.value);
-        final meetingEndTime = _parseTimeToDateTime(endTime.value);
+        // final meetingStartTime = _parseTimeToDateTime(startTime.value);
+        // final meetingEndTime = _parseTimeToDateTime(endTime.value);
+        // final _selectedDate = selectedDate.value;
 
         _notificationService.scheduleMeetingNotification(
             id: UniqueKey().hashCode,
@@ -167,11 +178,15 @@ class TimePickerController extends GetxController {
             title: containerData.value1,
             description: agenda.isNotEmpty ? agenda : 'No agenda set',
             meetingStartTime: meetingStartTime,
-            meetingEndTime: meetingEndTime);
+            meetingEndTime: meetingEndTime,
+            selectedDate: selectedDate.value);
 
         _resetForm();
         CustomSnackbar.showSuccess("Meeting scheduled successfully");
         Get.back();
+      } else if ( await isAvailable == false) {
+        CustomSnackbar.showError(
+            "Slot unavailable for date: ${selectedDate.value}, Start: ${startTime.value}, End: ${endTime.value}");
       }
     } catch (e) {
       CustomSnackbar.showError("Error storing meeting: $e");
@@ -180,11 +195,12 @@ class TimePickerController extends GetxController {
 
   Future<void> handleDelete(int index) async {
     try {
-      final bool? confirm = await showDeleteDialog(Get.context!);
-      if (confirm == true) {
-        await containerController.deleteContainerData(index);
-        CustomSnackbar.showSuccess("Meeting deleted successfully");
-      }
+      // final bool? confirm = await showDeleteDialog(Get.context!);
+      // if (confirm == true) {
+      await containerController.deleteContainerData(index);
+
+      CustomSnackbar.showSuccess("Meeting deleted successfully");
+      // }
     } catch (e) {
       CustomSnackbar.showError("Error deleting meeting: $e");
     }
@@ -192,6 +208,12 @@ class TimePickerController extends GetxController {
 
   DateTime _parseTimeToDateTime(String timeStr) {
     try {
+      if (timeStr.isEmpty) {
+        CustomSnackbar.showError("Please select both start and end times");
+      }
+
+      print('Parsing timeStr: $timeStr');
+
       final timeParts = timeStr.split(' ');
       final hourMin = timeParts[0].split(':');
       int hour = int.parse(hourMin[0]);
@@ -213,7 +235,7 @@ class TimePickerController extends GetxController {
         minute,
       );
     } catch (e) {
-      throw Exception('Invalid time format: $timeStr');
+      throw Exception('Invalid time format: $e');
     }
   }
 

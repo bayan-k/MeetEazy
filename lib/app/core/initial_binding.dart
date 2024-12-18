@@ -1,7 +1,7 @@
 import 'package:get/get.dart';
 import 'package:meetingreminder/controllers/bottom_nav_controller.dart';
 import 'package:meetingreminder/controllers/container_controller.dart';
-import 'package:meetingreminder/controllers/meet_scheduler.dart';
+
 import 'package:meetingreminder/controllers/meeting_counter_controller.dart';
 import 'package:meetingreminder/controllers/timepicker_controller.dart';
 
@@ -11,13 +11,13 @@ class InitialBinding extends Bindings {
   @override
   void dependencies() {
     try {
-      Get.put<MeetScheduler>(MeetScheduler(), permanent: true);
-
-      // Initialize NotificationService first
+      // Get.put<MeetScheduler>(MeetScheduler(), permanent: true);
       Get.put<NotificationService>(NotificationService(), permanent: true);
 
-      // Initialize ContainerController
+      // Initialize NotificationService first
       Get.put<ContainerController>(ContainerController(), permanent: true);
+
+      // Initialize ContainerController
 
       // Initialize MeetingCounter
       Get.put<MeetingCounter>(MeetingCounter(), permanent: true);

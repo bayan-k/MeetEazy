@@ -15,10 +15,8 @@ class TimelineView extends StatefulWidget {
 }
 
 class _TimelineViewState extends State<TimelineView> {
-  final ContainerController containerController =
-      Get.find<ContainerController>();
-  final BottomNavController bottomNavController =
-      Get.find<BottomNavController>();
+  final ContainerController containerController = Get.find<ContainerController>();
+  final BottomNavController bottomNavController = Get.find<BottomNavController>();
   final MeetingCounter meetingCounter = Get.find<MeetingCounter>();
   final TimePickerController timePickerController =
       Get.find<TimePickerController>();
@@ -42,13 +40,14 @@ class _TimelineViewState extends State<TimelineView> {
     final selectedDate = controller.selectedDate.value;
     if (selectedDate == null) return;
 
-    final index = controller.containerList
-        .indexWhere((meeting) => controller.isMeetingFromSelectedDate(meeting));
-
+    final index = controller.containerList.indexWhere(
+      (meeting) => controller.isMeetingFromSelectedDate(meeting)
+    );
+    
     if (index != -1) {
       // Calculate approximate position (each card is about 160 pixels high + 12 margin)
       final position = index * 172.0;
-
+      
       // Animate to the position
       controller.scrollController.animateTo(
         position,
@@ -117,8 +116,7 @@ class _TimelineViewState extends State<TimelineView> {
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
               style: TextButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               ),
               child: Text(
                 'Cancel',
@@ -133,8 +131,7 @@ class _TimelineViewState extends State<TimelineView> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red[400],
                 foregroundColor: Colors.white,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -201,8 +198,7 @@ class _TimelineViewState extends State<TimelineView> {
                     icon: const Icon(Icons.add),
                     onPressed: () {
                       if (minuteController.text.trim().isNotEmpty) {
-                        containerController.addMinute(
-                            meeting, minuteController.text.trim());
+                        containerController.addMinute(meeting, minuteController.text.trim());
                         minuteController.clear();
                       }
                     },
@@ -237,14 +233,11 @@ class _TimelineViewState extends State<TimelineView> {
                             itemBuilder: (context, index) {
                               return ListTile(
                                 contentPadding: EdgeInsets.zero,
-                                leading: Icon(Icons.circle,
-                                    size: 8, color: Colors.purple[400]),
+                                leading: Icon(Icons.circle, size: 8, color: Colors.purple[400]),
                                 title: Text(minutes[index]),
                                 trailing: IconButton(
-                                  icon: const Icon(Icons.delete_outline,
-                                      color: Colors.red),
-                                  onPressed: () => containerController
-                                      .deleteMinute(meeting, index),
+                                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                                  onPressed: () => containerController.deleteMinute(meeting, index),
                                 ),
                               );
                             },
@@ -291,7 +284,7 @@ class _TimelineViewState extends State<TimelineView> {
                     ),
                   );
                 }
-
+                
                 return Column(
                   children: [
                     // Header
@@ -309,24 +302,20 @@ class _TimelineViewState extends State<TimelineView> {
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
                               color: Colors.purple[50],
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.calendar_today,
-                                    color: Colors.purple[700], size: 16),
+                                Icon(Icons.calendar_today, color: Colors.purple[700], size: 16),
                                 const SizedBox(width: 8),
                                 Obx(() {
-                                  final selectedDate =
-                                      controller.selectedDate.value;
+                                  final selectedDate = controller.selectedDate.value;
                                   return Text(
                                     selectedDate != null
-                                        ? DateFormat('MMM d')
-                                            .format(selectedDate)
+                                        ? DateFormat('MMM d').format(selectedDate)
                                         : 'All Meetings',
                                     style: TextStyle(
                                       color: Colors.purple[700],
@@ -340,7 +329,7 @@ class _TimelineViewState extends State<TimelineView> {
                         ],
                       ),
                     ),
-
+                    
                     // Meeting List
                     Expanded(
                       child: ListView.builder(
@@ -354,22 +343,15 @@ class _TimelineViewState extends State<TimelineView> {
                         itemCount: controller.containerList.length,
                         itemBuilder: (context, index) {
                           final meeting = controller.containerList[index];
-                          final isSelectedDateMeeting =
-                              controller.isMeetingFromSelectedDate(meeting);
-
+                          final isSelectedDateMeeting = controller.isMeetingFromSelectedDate(meeting);
+                          
                           return Container(
                             margin: const EdgeInsets.only(bottom: 12),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: isSelectedDateMeeting
-                                    ? [
-                                        Color(0xFF9B4DCA),
-                                        Color(0xFFFF6B6B)
-                                      ] // Purple to Coral for selected
-                                    : [
-                                        Colors.purple[100]!,
-                                        Colors.purple[50]!
-                                      ], // Default colors
+                                    ? [Color(0xFF9B4DCA), Color(0xFFFF6B6B)]  // Purple to Coral for selected
+                                    : [Colors.purple[100]!, Colors.purple[50]!], // Default colors
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
@@ -389,14 +371,11 @@ class _TimelineViewState extends State<TimelineView> {
                               data: Theme.of(context).copyWith(
                                 dividerColor: Colors.transparent,
                                 colorScheme: ColorScheme.light(
-                                  primary: isSelectedDateMeeting
-                                      ? Colors.white
-                                      : Colors.purple[700]!,
+                                  primary: isSelectedDateMeeting ? Colors.white : Colors.purple[700]!,
                                 ),
                               ),
                               child: ExpansionTile(
-                                tilePadding: const EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 12),
+                                tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(16),
                                 ),
@@ -406,10 +385,8 @@ class _TimelineViewState extends State<TimelineView> {
                                     Column(
                                       children: [
                                         TweenAnimationBuilder<double>(
-                                          tween: Tween<double>(
-                                              begin: 0.8, end: 1.2),
-                                          duration: const Duration(
-                                              milliseconds: 1500),
+                                          tween: Tween<double>(begin: 0.8, end: 1.2),
+                                          duration: const Duration(milliseconds: 1500),
                                           curve: Curves.easeInOut,
                                           builder: (context, scale, child) {
                                             return Transform.scale(
@@ -419,33 +396,18 @@ class _TimelineViewState extends State<TimelineView> {
                                                 height: 20,
                                                 decoration: BoxDecoration(
                                                   gradient: LinearGradient(
-                                                    colors:
-                                                        isSelectedDateMeeting
-                                                            ? [
-                                                                Colors.white,
-                                                                Colors.white70
-                                                              ]
-                                                            : [
-                                                                Color(
-                                                                    0xFF9B4DCA),
-                                                                Color(0xFF9B4DCA)
-                                                                    .withOpacity(
-                                                                        0.7)
-                                                              ],
+                                                    colors: isSelectedDateMeeting
+                                                        ? [Colors.white, Colors.white70]
+                                                        : [Color(0xFF9B4DCA), Color(0xFF9B4DCA).withOpacity(0.7)],
                                                     begin: Alignment.topLeft,
                                                     end: Alignment.bottomRight,
                                                   ),
                                                   shape: BoxShape.circle,
                                                   boxShadow: [
                                                     BoxShadow(
-                                                      color:
-                                                          isSelectedDateMeeting
-                                                              ? Colors.white
-                                                                  .withOpacity(
-                                                                      0.5)
-                                                              : Color(0xFF9B4DCA)
-                                                                  .withOpacity(
-                                                                      0.3),
+                                                      color: isSelectedDateMeeting
+                                                          ? Colors.white.withOpacity(0.5)
+                                                          : Color(0xFF9B4DCA).withOpacity(0.3),
                                                       blurRadius: 8,
                                                       spreadRadius: 2,
                                                     ),
@@ -461,15 +423,8 @@ class _TimelineViewState extends State<TimelineView> {
                                           decoration: BoxDecoration(
                                             gradient: LinearGradient(
                                               colors: isSelectedDateMeeting
-                                                  ? [
-                                                      Colors.white,
-                                                      Colors.white70
-                                                    ]
-                                                  : [
-                                                      Color(0xFF9B4DCA),
-                                                      Color(0xFF9B4DCA)
-                                                          .withOpacity(0.3)
-                                                    ],
+                                                  ? [Colors.white, Colors.white70]
+                                                  : [Color(0xFF9B4DCA), Color(0xFF9B4DCA).withOpacity(0.3)],
                                               begin: Alignment.topCenter,
                                               end: Alignment.bottomCenter,
                                             ),
@@ -480,17 +435,14 @@ class _TimelineViewState extends State<TimelineView> {
                                     const SizedBox(width: 20),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             meeting.value1,
                                             style: TextStyle(
                                               fontSize: 18,
                                               fontWeight: FontWeight.bold,
-                                              color: isSelectedDateMeeting
-                                                  ? Colors.white
-                                                  : Color(0xFF2E3147),
+                                              color: isSelectedDateMeeting ? Colors.white : Color(0xFF2E3147),
                                             ),
                                           ),
                                           const SizedBox(height: 8),
@@ -498,41 +450,32 @@ class _TimelineViewState extends State<TimelineView> {
                                             children: [
                                               Icon(
                                                 Icons.access_time,
-                                                color: isSelectedDateMeeting
-                                                    ? Colors.white70
-                                                    : Colors.purple[300],
+                                                color: isSelectedDateMeeting ? Colors.white70 : Colors.purple[300],
                                                 size: 16,
                                               ),
                                               const SizedBox(width: 8),
                                               Text(
                                                 '${meeting.value2} - ${meeting.value3}',
                                                 style: TextStyle(
-                                                  color: isSelectedDateMeeting
-                                                      ? Colors.white
-                                                      : Colors.grey[700],
+                                                  color: isSelectedDateMeeting ? Colors.white : Colors.grey[700],
                                                 ),
                                               ),
                                             ],
                                           ),
                                           const SizedBox(height: 8),
                                           Container(
-                                            padding: const EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 4),
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                             decoration: BoxDecoration(
                                               color: isSelectedDateMeeting
-                                                  ? Colors.white
-                                                      .withOpacity(0.2)
+                                                  ? Colors.white.withOpacity(0.2)
                                                   : Colors.purple[50],
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
+                                              borderRadius: BorderRadius.circular(12),
                                             ),
                                             child: Text(
                                               meeting.formattedDate,
                                               style: TextStyle(
                                                 fontSize: 12,
-                                                color: isSelectedDateMeeting
-                                                    ? Colors.white
-                                                    : Colors.purple[700],
+                                                color: isSelectedDateMeeting ? Colors.white : Colors.purple[700],
                                                 fontWeight: FontWeight.w500,
                                               ),
                                             ),
@@ -550,21 +493,15 @@ class _TimelineViewState extends State<TimelineView> {
                                     children: [
                                       if (meeting.minutes.isNotEmpty) ...[
                                         Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 4, vertical: 2),
+                                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                                           decoration: BoxDecoration(
-                                            color: isSelectedDateMeeting
-                                                ? Colors.white.withOpacity(0.2)
-                                                : Colors.purple[100],
-                                            borderRadius:
-                                                BorderRadius.circular(8),
+                                            color: isSelectedDateMeeting ? Colors.white.withOpacity(0.2) : Colors.purple[100],
+                                            borderRadius: BorderRadius.circular(8),
                                           ),
                                           child: Text(
                                             '${meeting.minutes.length}',
                                             style: TextStyle(
-                                              color: isSelectedDateMeeting
-                                                  ? Colors.white
-                                                  : Colors.purple[700],
+                                              color: isSelectedDateMeeting ? Colors.white : Colors.purple[700],
                                               fontWeight: FontWeight.bold,
                                               fontSize: 11,
                                             ),
@@ -580,13 +517,10 @@ class _TimelineViewState extends State<TimelineView> {
                                           visualDensity: VisualDensity.compact,
                                           icon: Icon(
                                             Icons.edit_note,
-                                            color: isSelectedDateMeeting
-                                                ? Colors.white
-                                                : Colors.purple[400],
+                                            color: isSelectedDateMeeting ? Colors.white : Colors.purple[400],
                                             size: 20,
                                           ),
-                                          onPressed: () => _showMinutesDialog(
-                                              context, meeting),
+                                          onPressed: () => _showMinutesDialog(context, meeting),
                                         ),
                                       ),
                                       const SizedBox(width: 2),
@@ -598,13 +532,10 @@ class _TimelineViewState extends State<TimelineView> {
                                           visualDensity: VisualDensity.compact,
                                           icon: Icon(
                                             Icons.delete_outline,
-                                            color: isSelectedDateMeeting
-                                                ? Colors.white70
-                                                : Colors.red[400],
+                                            color: isSelectedDateMeeting ? Colors.white70 : Colors.red[400],
                                             size: 18,
                                           ),
-                                          onPressed: () =>
-                                              _showDeleteDialog(context, index),
+                                          onPressed: () => _showDeleteDialog(context, index),
                                         ),
                                       ),
                                     ],
@@ -621,12 +552,10 @@ class _TimelineViewState extends State<TimelineView> {
                                     ),
                                     padding: const EdgeInsets.all(20),
                                     child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
+                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                           children: [
                                             Text(
                                               'Meeting Minutes',
@@ -641,9 +570,7 @@ class _TimelineViewState extends State<TimelineView> {
                                                 Icons.add_circle,
                                                 color: Colors.purple[400],
                                               ),
-                                              onPressed: () =>
-                                                  _showMinutesDialog(
-                                                      context, meeting),
+                                              onPressed: () => _showMinutesDialog(context, meeting),
                                             ),
                                           ],
                                         ),
@@ -651,8 +578,7 @@ class _TimelineViewState extends State<TimelineView> {
                                         if (meeting.minutes.isEmpty)
                                           Center(
                                             child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(16.0),
+                                              padding: const EdgeInsets.all(16.0),
                                               child: Text(
                                                 'No minutes added yet',
                                                 style: TextStyle(
@@ -665,17 +591,13 @@ class _TimelineViewState extends State<TimelineView> {
                                         else
                                           ListView.builder(
                                             shrinkWrap: true,
-                                            physics:
-                                                const NeverScrollableScrollPhysics(),
+                                            physics: const NeverScrollableScrollPhysics(),
                                             itemCount: meeting.minutes.length,
-                                            itemBuilder:
-                                                (context, minuteIndex) {
+                                            itemBuilder: (context, minuteIndex) {
                                               return Padding(
-                                                padding: const EdgeInsets.only(
-                                                    bottom: 8),
+                                                padding: const EdgeInsets.only(bottom: 8),
                                                 child: Row(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
+                                                  crossAxisAlignment: CrossAxisAlignment.start,
                                                   children: [
                                                     Icon(
                                                       Icons.circle,
@@ -685,12 +607,10 @@ class _TimelineViewState extends State<TimelineView> {
                                                     const SizedBox(width: 8),
                                                     Expanded(
                                                       child: Text(
-                                                        meeting.minutes[
-                                                            minuteIndex],
+                                                        meeting.minutes[minuteIndex],
                                                         style: const TextStyle(
                                                           fontSize: 14,
-                                                          color:
-                                                              Color(0xFF2B3A67),
+                                                          color: Color(0xFF2B3A67),
                                                         ),
                                                       ),
                                                     ),
@@ -700,11 +620,7 @@ class _TimelineViewState extends State<TimelineView> {
                                                         color: Colors.red[400],
                                                         size: 20,
                                                       ),
-                                                      onPressed: () =>
-                                                          containerController
-                                                              .deleteMinute(
-                                                                  meeting,
-                                                                  minuteIndex),
+                                                      onPressed: () => containerController.deleteMinute(meeting, minuteIndex),
                                                     ),
                                                   ],
                                                 ),
@@ -726,7 +642,7 @@ class _TimelineViewState extends State<TimelineView> {
               },
             ),
           ),
-
+          
           // Bottom Navigation Bar
           Positioned(
             bottom: 20,
@@ -748,10 +664,8 @@ class _TimelineViewState extends State<TimelineView> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  _buildNavItem(
-                      context, 'Home', 'assets/images/icons/home-page.png', 0),
-                  _buildNavItem(context, 'Timeline',
-                      'assets/images/icons/clock(1).png', 1),
+                  _buildNavItem(context, 'Home', 'assets/images/icons/home-page.png', 0),
+                  _buildNavItem(context, 'Timeline', 'assets/images/icons/clock(1).png', 1),
                 ],
               ),
             ),
@@ -761,10 +675,9 @@ class _TimelineViewState extends State<TimelineView> {
     );
   }
 
-  Widget _buildNavItem(
-      BuildContext context, String title, String iconPath, int index) {
+  Widget _buildNavItem(BuildContext context, String title, String iconPath, int index) {
     final controller = Get.find<BottomNavController>();
-
+    
     return Obx(() {
       final isSelected = controller.selectedIndex.value == index;
       return GestureDetector(
@@ -777,9 +690,7 @@ class _TimelineViewState extends State<TimelineView> {
             vertical: 12,
           ),
           decoration: BoxDecoration(
-            color: isSelected
-                ? Color(0xFF9B4DCA).withOpacity(0.15)
-                : Colors.transparent,
+            color: isSelected ? Color(0xFF9B4DCA).withOpacity(0.15) : Colors.transparent,
             borderRadius: BorderRadius.circular(25),
           ),
           child: Row(
