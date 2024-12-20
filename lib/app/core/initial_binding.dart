@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:intl/intl.dart';
 import 'package:meetingreminder/controllers/bottom_nav_controller.dart';
 import 'package:meetingreminder/controllers/container_controller.dart';
 
@@ -26,7 +27,12 @@ class InitialBinding extends Bindings {
       Get.put<BottomNavController>(BottomNavController(), permanent: true);
 
       // Initialize TimePickerController last as it depends on other controllers
-      Get.put<TimePickerController>(TimePickerController(), permanent: true);
+      final timePickerController = TimePickerController();
+      Get.put<TimePickerController>(timePickerController, permanent: true);
+
+      timePickerController.selectedDate.value = DateTime.now();
+      timePickerController.formattedDate.value =
+          DateFormat('MMM d, y').format(DateTime.now());
     } catch (e) {
       print('Error in InitialBinding: $e');
       rethrow;

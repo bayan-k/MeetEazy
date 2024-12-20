@@ -14,13 +14,17 @@ class ContainerController extends GetxController {
 
   // Add selected date tracker
   Rx<DateTime?> selectedDate = Rx<DateTime?>(null);
-  final ScrollController scrollController = ScrollController();
+  ScrollController scrollController = ScrollController();
 
   @override
   void onInit() {
     super.onInit();
     initializeBox();
+    selectedDate = Rx<DateTime>(DateTime.now());
+    scrollController = ScrollController();
     _notificationService = Get.find<NotificationService>();
+    getMeetingCountMap();
+    update();
   }
 
   Future<void> initializeBox() async {
@@ -169,12 +173,18 @@ class ContainerController extends GetxController {
   }
 
   void setSelectedDate(DateTime? date) {
-    selectedDate.value = date;
-    if (date != null) {
-      // Only scroll if a date is selected
-      scrollToSelectedMeeting();
+    try {
+      Future.microtask(() {
+        selectedDate.value = date ?? DateTime.now();
+        if (date != null) {
+          // Only scroll if a date is selected
+          scrollToSelectedMeeting();
+        }
+        update();
+      });
+    } catch (e) {
+      print('Error in setSelectedDate: $e');
     }
-    update();
   }
 
   void scrollToSelectedMeeting() {
@@ -217,6 +227,10 @@ class ContainerController extends GetxController {
       return false;
     }
     await loadContainerData();
+
+    // for (var meeting in containerList) {
+    //   print('_________${meeting.date}________________________');
+    // }
     // Ensure containerList is up-to-date if it depends on async operations
 
     if (_box == null) {
@@ -230,10 +244,17 @@ class ContainerController extends GetxController {
         meeting.date.month,
         meeting.date.day,
       );
+      final newSelectedDate =
+          DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
 
-      if (existingDate.isAtSameMomentAs(selectedDate)) {
-        final existingStart = _parseTimeToDateTime(meeting.value2);
-        final existingEnd = _parseTimeToDateTime(meeting.value3);
+      print('__________________existingDate__{$existingDate}________________');
+      print(
+          '_________________selectedDate______$newSelectedDate.__________________');
+
+      if (existingDate.isAtSameMomentAs(newSelectedDate)) {
+        final existingStart =
+            _parseTimeToDateTime(meeting.value2, meeting.date);
+        final existingEnd = _parseTimeToDateTime(meeting.value3, meeting.date);
         printStartAndEndTimes();
 
         // meeting.value2;
@@ -244,7 +265,9 @@ class ContainerController extends GetxController {
         // Check for overlap
         if (newStart.isBefore(existingEnd) && newEnd.isAfter(existingStart) ||
             newStart.isAtSameMomentAs(existingStart) ||
-            newEnd.isAtSameMomentAs(existingEnd)) {
+            newEnd.isAtSameMomentAs(existingEnd) ||
+            newStart.isAtSameMomentAs(existingEnd) ||
+            newEnd.isAtSameMomentAs(newStart)) {
           // CustomSnackbar.showError(
           //     'Time slot overlaps with an existing meeting');
           return false;
@@ -282,12 +305,8 @@ class ContainerController extends GetxController {
     }
   }
 
-  DateTime _parseTimeToDateTime(String timeStr) {
+  DateTime _parseTimeToDateTime(String timeStr, DateTime meetingDate) {
     try {
-      if (selectedDate.value == null) {
-        throw Exception('selected date is null');
-      }
-
       final timeParts = timeStr.split(' ');
       final hourMin = timeParts[0].split(':');
       int hour = int.parse(hourMin[0]);
@@ -302,9 +321,9 @@ class ContainerController extends GetxController {
       }
 
       return DateTime(
-        selectedDate.value!.year,
-        selectedDate.value!.month,
-        selectedDate.value!.day,
+        meetingDate.year,
+        meetingDate.month,
+        meetingDate.day,
         hour,
         minute,
       );

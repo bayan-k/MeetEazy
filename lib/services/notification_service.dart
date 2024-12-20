@@ -41,6 +41,7 @@ class NotificationService extends GetxService {
         description: 'Notifications for upcoming meetings',
         importance: Importance.max,
         enableVibration: true,
+        sound: RawResourceAndroidNotificationSound('alert '),
         playSound: true,
         showBadge: true,
       );
@@ -53,7 +54,7 @@ class NotificationService extends GetxService {
 
       // Initialize notification settings for Android
       const AndroidInitializationSettings initializationSettingsAndroid =
-          AndroidInitializationSettings('@mipmap/ic_launcher');
+          AndroidInitializationSettings('@mipmap/meetreminder');
 
       // Initialize notification settings for iOS
       final DarwinInitializationSettings initializationSettingsIOS =
@@ -133,8 +134,7 @@ class NotificationService extends GetxService {
       required String description,
       required DateTime meetingStartTime,
       required DateTime meetingEndTime,
-      required DateTime selectedDate
-      }) async {
+      required DateTime selectedDate}) async {
     // await requestExactAlarmsPermission();
 
     try {

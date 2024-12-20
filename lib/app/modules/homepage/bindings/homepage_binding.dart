@@ -8,12 +8,23 @@ import 'package:meetingreminder/services/notification_service.dart';
 class HomePageBinding extends Bindings {
   @override
   void dependencies() {
+    // Only find existing controllers, don't recreate them
     // Initialize ContainerController first as others might depend on it
-    Get.put<ContainerController>(ContainerController(), permanent: true);
+    if (!Get.isRegistered<ContainerController>()) {
+      Get.put<ContainerController>(ContainerController(), permanent: true);
+    }
 
+    if (!Get.isRegistered<TimePickerController>()) {
+      Get.put<TimePickerController>(TimePickerController(), permanent: true);
+    }
     // Then initialize other controllers
-    Get.put<TimePickerController>(TimePickerController(), permanent: true);
-    Get.put<NotificationService>(NotificationService(), permanent: true);
-    Get.put<BottomNavController>(BottomNavController(), permanent: true);
+
+    if (!Get.isRegistered<NotificationService>()) {
+      Get.put<NotificationService>(NotificationService(), permanent: true);
+    }
+
+    if (!Get.isRegistered<BottomNavController>()) {
+      Get.put<BottomNavController>(BottomNavController(), permanent: true);
+    }
   }
 }

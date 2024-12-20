@@ -36,7 +36,7 @@ class TimePickerController extends GetxController {
   final endTime = ''.obs;
   final remarks = ''.obs;
   final formattedDate = ''.obs;
-  final selectedDate = DateTime.now().obs;
+  final selectedDate = Rx<DateTime?>(null);
   final TextEditingController remarkController = TextEditingController();
   late final NotificationService _notificationService;
   late final ContainerController containerController;
@@ -47,6 +47,8 @@ class TimePickerController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    selectedDate.value = DateTime.now();
+    formattedDate.value = DateFormat('MMM d, y').format(DateTime.now());
     _initializeController();
   }
 
@@ -57,6 +59,7 @@ class TimePickerController extends GetxController {
       await _initializeNotifications();
       formattedDate.value = DateFormat('MMM d, y').format(DateTime.now());
     } catch (e) {
+      print('Error initializing TimePickerController: $e');
       CustomSnackbar.showError("Error initializing: $e");
     }
   }
@@ -111,31 +114,54 @@ class TimePickerController extends GetxController {
           );
         },
       );
-
+      // Handle the picked date after the dialog is completely closed
       if (picked != null) {
-        selectedDate.value = picked;
-
-        formattedDate.value = DateFormat('MMM d, y').format(picked);
-        update();
+        // Use a microtask to ensure we're not updating state during build
+        Future.microtask(() {
+          selectedDate.value = picked;
+          formattedDate.value = DateFormat('MMM d, y').format(picked);
+          update();
+        });
+      } else if (picked == null) {
+        Future.microtask(() {
+          selectedDate.value = DateTime.now();
+          formattedDate.value = DateFormat('MMM d,y').format(DateTime.now());
+        });
+        // selectedDate.value = DateTime.now();
       }
+      ;
     } catch (e) {
       CustomSnackbar.showError("Error setting date: $e");
     }
   }
 
   Future<void> storeMeetingData(String agenda, List<String> minutes) async {
-    // _parseTimeToDateTime(formattedDate.value));
-    print(startTime.value);
-    print(endTime.value);
-    Future<bool> isAvailable = containerController.isSlotAvailable(
-        _parseTimeToDateTime(startTime.value),
-        _parseTimeToDateTime(endTime.value),
-        selectedDate.value);
     try {
+      if (selectedDate.value == null) {
+        CustomSnackbar.showError('please select a date');
+        return;
+      }
       if (startTime.value.isEmpty || endTime.value.isEmpty) {
         CustomSnackbar.showError("Please select both start and end times");
         return;
-      } else if (await isAvailable) {
+      }
+
+      bool isAvailable = false;
+      String _selectedDate = DateFormat('d MMM y').format(selectedDate.value!);
+      Future<bool> checkavailability() async {
+        if (selectedDate.value == null) {
+          return false;
+        }
+
+        return isAvailable = (await containerController.isSlotAvailable(
+            _parseTimeToDateTime(startTime.value),
+            _parseTimeToDateTime(endTime.value),
+            selectedDate.value!));
+      }
+
+      isAvailable = await checkavailability();
+
+      if (isAvailable == true) {
         final containerData = ContainerData(
           key1: "Meeting Type",
           value1: remarkController.text.isEmpty
@@ -145,7 +171,7 @@ class TimePickerController extends GetxController {
           value2: startTime.value,
           key3: "End Time",
           value3: endTime.value,
-          date: selectedDate.value,
+          date: selectedDate.value!,
           formattedDate: formattedDate.value,
           agenda: agenda,
           minutes: minutes,
@@ -179,14 +205,14 @@ class TimePickerController extends GetxController {
             description: agenda.isNotEmpty ? agenda : 'No agenda set',
             meetingStartTime: meetingStartTime,
             meetingEndTime: meetingEndTime,
-            selectedDate: selectedDate.value);
+            selectedDate: selectedDate.value!);
 
         _resetForm();
         CustomSnackbar.showSuccess("Meeting scheduled successfully");
         Get.back();
-      } else if ( await isAvailable == false) {
+      } else if (isAvailable == false) {
         CustomSnackbar.showError(
-            "Slot unavailable for date: ${selectedDate.value}, Start: ${startTime.value}, End: ${endTime.value}");
+            "Slot unavailable for  ${startTime.value} -  ${endTime.value} on  $_selectedDate, ");
       }
     } catch (e) {
       CustomSnackbar.showError("Error storing meeting: $e");
@@ -228,9 +254,9 @@ class TimePickerController extends GetxController {
       }
 
       return DateTime(
-        selectedDate.value.year,
-        selectedDate.value.month,
-        selectedDate.value.day,
+        selectedDate.value!.year,
+        selectedDate.value!.month,
+        selectedDate.value!.day,
         hour,
         minute,
       );

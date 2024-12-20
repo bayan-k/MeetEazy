@@ -3,7 +3,8 @@ import 'package:get/get.dart';
 import 'package:meetingreminder/controllers/container_controller.dart';
 import 'package:meetingreminder/models/container.dart';
 import 'package:meetingreminder/shared_widgets/delete_dialog.dart';
-import 'package:meetingreminder/app/modules/meeting_details/views/meeting_details_page.dart';
+import 'package:meetingreminder/shared_widgets/minutes_page.dart';
+
 
 Widget buildContainer(BuildContext context) {
   final ContainerController containerController =
