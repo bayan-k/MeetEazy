@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:meetingreminder/models/container.dart';
+import 'package:meetingreminder/utils/responsive_helper.dart';
 
 class MeetingCard extends StatelessWidget {
   final ContainerData meeting;
@@ -18,7 +19,7 @@ class MeetingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      margin:  EdgeInsets.symmetric(vertical: ResponsiveHelper.spacing(13), horizontal:ResponsiveHelper.spacing(6)),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
@@ -28,7 +29,7 @@ class MeetingCard extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(ResponsiveHelper.radius(15)),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.1),
@@ -46,9 +47,9 @@ class MeetingCard extends StatelessWidget {
           ),
         ),
         child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          tilePadding:  EdgeInsets.symmetric(horizontal: ResponsiveHelper.spacing(15), vertical: ResponsiveHelper.spacing(13)),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(ResponsiveHelper.radius(20)),
           ),
           title: _buildTitle(meeting),
           subtitle: _buildSubtitle(meeting),
@@ -62,9 +63,9 @@ class MeetingCard extends StatelessWidget {
   Widget _buildTitle(ContainerData meeting) {
     return Text(
       meeting.value1,
-      style: const TextStyle(
+      style:  TextStyle(
         fontWeight: FontWeight.bold,
-        fontSize: 18,
+        fontSize: ResponsiveHelper.fontSize(15),
         color: Color(0xFF2E3147),
       ),
     );
@@ -74,20 +75,23 @@ class MeetingCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(height: 8),
+        //const SizedBox(height: 8),
+         SizedBox(height: ResponsiveHelper.spacing(10)),
+
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            Icon(Icons.access_time, color: Colors.purple[300], size: 16),
-            const SizedBox(width: 8),
+            Icon(Icons.access_time, color: Colors.purple[300], size: 20),
+             SizedBox(height: ResponsiveHelper.spacing(10)),
             Text(
               '${meeting.value2} - ${meeting.value3}',
-              style: TextStyle(color: Colors.grey[700]),
+              style: TextStyle(color: Colors.grey[700],fontWeight: FontWeight.bold),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+       SizedBox(height: ResponsiveHelper.spacing(8)),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding:  EdgeInsets.symmetric(horizontal: ResponsiveHelper.spacing(20), vertical:ResponsiveHelper.spacing(5)),
           decoration: BoxDecoration(
             color: Colors.purple.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
@@ -95,7 +99,7 @@ class MeetingCard extends StatelessWidget {
           child: Text(
             meeting.formattedDate,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: ResponsiveHelper.fontSize(11),
               color: Colors.purple[700],
               fontWeight: FontWeight.w500,
             ),
@@ -107,13 +111,13 @@ class MeetingCard extends StatelessWidget {
 
   Widget _buildTrailing(BuildContext context) {
     return SizedBox(
-      width: 120,
+      width: ResponsiveHelper.heightScale*120,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (meeting.minutes.isNotEmpty)
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding:  EdgeInsets.symmetric(horizontal:ResponsiveHelper.spacing(7), vertical:ResponsiveHelper.spacing(3)),
               decoration: BoxDecoration(
                 color: Colors.purple[100],
                 borderRadius: BorderRadius.circular(12),

@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:meetingreminder/controllers/bottom_nav_controller.dart';
 import 'package:meetingreminder/controllers/container_controller.dart';
+import 'package:meetingreminder/controllers/font_controller.dart';
 import 'package:meetingreminder/controllers/timepicker_controller.dart';
 import 'package:meetingreminder/models/container.dart';
 import 'package:meetingreminder/shared_widgets/meeting_setter_box.dart';
 import 'package:meetingreminder/shared_widgets/confirm_dialog.dart';
 import 'package:meetingreminder/shared_widgets/meeting_tile_home_page.dart';
 import 'package:meetingreminder/utils/dialog_utils.dart';
+import 'package:meetingreminder/utils/responsive_helper.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import 'package:get/get.dart';
@@ -28,6 +30,8 @@ class _HomePageViewState extends State<HomePageView> {
       Get.find<TimePickerController>();
   final ContainerController containerController =
       Get.find<ContainerController>();
+
+  final FontController fontController = Get.put(FontController());
 
   TextEditingController controller1 = TextEditingController();
   List<String> imageItems = [
@@ -76,18 +80,22 @@ class _HomePageViewState extends State<HomePageView> {
               children: [
                 _buildAppbar(), // App Bar
                 _buildCalendar(), // Calendar
-                const SizedBox(height: 20),
+                SizedBox(
+                  height: ResponsiveHelper.heightScale * 20,
+                ),
                 _todayHeader(), // Today's Meetings Header
-                const SizedBox(height: 20),
+                SizedBox(
+                  height: ResponsiveHelper.heightScale * 20,
+                ),
                 _buildTodayMeetinglist(),
 
                 // Bottom Navigation Bar
               ],
             ),
           ),
-          // Today's Meetings List
-          _buildBottomBar(),
-          _buildFloatingAB(),
+          // // Today's Meetings List
+          // _buildBottomBar(),
+          // _buildFloatingAB(),
           // Floating Action Button
         ],
       ),
@@ -189,11 +197,13 @@ class _HomePageViewState extends State<HomePageView> {
                   size: 64,
                   color: Colors.grey[400],
                 ),
-                const SizedBox(height: 16),
+                SizedBox(
+                  height: ResponsiveHelper.heightScale * 20,
+                ),
                 Text(
                   'No meetings scheduled for today',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: ResponsiveHelper.fontSize(13),
                     color: Colors.grey[600],
                     fontWeight: FontWeight.w500,
                   ),
@@ -205,8 +215,8 @@ class _HomePageViewState extends State<HomePageView> {
         return ListView.builder(
           physics: const BouncingScrollPhysics(),
           padding: EdgeInsets.only(
-            left: 20,
-            right: 20,
+            left: ResponsiveHelper.spacing(15),
+            right: ResponsiveHelper.spacing(15),
             bottom: MediaQuery.of(context).padding.bottom + 80,
           ),
           itemCount: todayMeetings.length,
@@ -228,7 +238,7 @@ class _HomePageViewState extends State<HomePageView> {
 
   Widget _todayHeader() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding:  EdgeInsets.symmetric(horizontal: ResponsiveHelper.spacing(20)),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -267,7 +277,7 @@ class _HomePageViewState extends State<HomePageView> {
 
   Widget _buildAppbar() {
     return Padding(
-      padding: const EdgeInsets.all(20),
+      padding: EdgeInsets.all(ResponsiveHelper.spacing(20)),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -277,16 +287,16 @@ class _HomePageViewState extends State<HomePageView> {
               Text(
                 'Meeting Planner',
                 style: TextStyle(
-                  fontSize: 28,
+                  fontSize: ResponsiveHelper.fontSize(18),
                   fontWeight: FontWeight.bold,
                   color: Color(0xFF9B4DCA), // Bright purple
                 ),
               ),
-              const SizedBox(height: 4),
+              SizedBox(height: Get.size.height * 0.01),
               Text(
                 DateFormat('EEEE, MMMM d').format(DateTime.now()),
                 style: TextStyle(
-                  fontSize: 16,
+                  fontSize: ResponsiveHelper.fontSize(12),
                   color: Color(0xFFFF6B6B), // Vibrant coral red
                 ),
               ),
@@ -294,10 +304,12 @@ class _HomePageViewState extends State<HomePageView> {
           ),
           // Month Picker
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: EdgeInsets.symmetric(
+                horizontal: ResponsiveHelper.spacing(16),
+                vertical: ResponsiveHelper.spacing(8)),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(ResponsiveHelper.radius(20)),
               boxShadow: [
                 BoxShadow(
                   color:
@@ -317,8 +329,8 @@ class _HomePageViewState extends State<HomePageView> {
                       value: month,
                       child: Text(
                         month,
-                        style: const TextStyle(
-                          fontSize: 16,
+                        style: TextStyle(
+                          fontSize: ResponsiveHelper.fontSize(12),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -340,11 +352,11 @@ class _HomePageViewState extends State<HomePageView> {
 
   Widget _buildCalendar() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: EdgeInsets.symmetric(horizontal: ResponsiveHelper.spacing(18)),
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(ResponsiveHelper.radius(30)),
           boxShadow: [
             BoxShadow(
               color: Color(0xFF9B4DCA).withOpacity(0.1),
@@ -401,7 +413,7 @@ class _HomePageViewState extends State<HomePageView> {
                     headerStyle: HeaderStyle(
                       titleTextStyle: TextStyle(
                         color: Color(0xFF9B4DCA),
-                        fontSize: 20,
+                        fontSize: ResponsiveHelper.fontSize(15),
                         fontWeight: FontWeight.bold,
                       ),
                       formatButtonVisible: false,
@@ -417,10 +429,12 @@ class _HomePageViewState extends State<HomePageView> {
                       holidayTextStyle: TextStyle(color: Color(0xFFFF6B6B)),
                       defaultTextStyle:
                           TextStyle(color: Color(0xFF9B4DCA).withOpacity(0.8)),
-                      selectedTextStyle:
-                          const TextStyle(color: Colors.white, fontSize: 16),
-                      todayTextStyle:
-                          TextStyle(color: Color(0xFF9B4DCA), fontSize: 16),
+                      selectedTextStyle: TextStyle(
+                          color: Colors.white,
+                          fontSize: ResponsiveHelper.fontSize(20)),
+                      todayTextStyle: TextStyle(
+                          color: Color(0xFF9B4DCA),
+                          fontSize: ResponsiveHelper.fontSize(20)),
                       selectedDecoration: BoxDecoration(
                         color: Color(0xFF9B4DCA),
                         shape: BoxShape.circle,

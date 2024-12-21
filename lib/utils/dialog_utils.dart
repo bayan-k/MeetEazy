@@ -67,7 +67,8 @@ class DialogUtils {
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
+              onPressed: () => Get.back(result: false),
+              //  Navigator.of(context).pop(false),
               child: Text(
                 'Cancel',
                 style: TextStyle(
@@ -77,7 +78,8 @@ class DialogUtils {
               ),
             ),
             ElevatedButton(
-              onPressed: () => Navigator.of(context).pop(true),
+              onPressed: () => Get.back(result: true),
+              //  Navigator.of(context).pop(true),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red[400],
                 foregroundColor: Colors.white,

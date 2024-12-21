@@ -1,3 +1,4 @@
+import 'package:android_alarm_manager_plus/android_alarm_manager_plus.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:meetingreminder/shared_widgets/custom_snackbar.dart';
 
@@ -30,6 +31,8 @@ class NotificationService extends GetxService {
       print('Local Timezone: $kolkata'); // Debugging
       // Set local timezone
       tz.setLocalLocation(kolkata);
+      // Initialize Android Alarm Manager
+      await AndroidAlarmManager.initialize();
 
       // Request permission to schedule exact alarms (Android 12+)
       await requestExactAlarmsPermission();

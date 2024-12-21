@@ -33,6 +33,9 @@ class InitialBinding extends Bindings {
       timePickerController.selectedDate.value = DateTime.now();
       timePickerController.formattedDate.value =
           DateFormat('MMM d, y').format(DateTime.now());
+
+                                
+
     } catch (e) {
       print('Error in InitialBinding: $e');
       rethrow;
